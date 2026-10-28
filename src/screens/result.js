@@ -184,7 +184,7 @@ export function mountResult(root, params = {}) {
             </header>
             <div class="result-explanation__body">
               <div class="nova-quote">
-                <img src="/assets/img/dr-nova.png" alt="" aria-hidden="true" loading="lazy" />
+                <img src="${import.meta.env.BASE_URL}assets/img/dr-nova.png" alt="" aria-hidden="true" loading="lazy" />
                 <span class="nova-quote__tag">DR. NOVA <b>//</b> MENTOR</span>
               </div>
               <div class="result-explanation__copy">

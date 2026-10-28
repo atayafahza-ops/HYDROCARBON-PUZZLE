@@ -333,7 +333,7 @@ function briefingMarkup(run, level) {
 
       <div class="briefing-mentor">
         <div class="briefing-mentor__portrait">
-          <img src="/assets/img/dr-nova.png" alt="Dr. Nova" loading="lazy" />
+          <img src="${import.meta.env.BASE_URL}assets/img/dr-nova.png" alt="Dr. Nova" loading="lazy" />
         </div>
         <div>
           <span>DR. NOVA <b>//</b> MENTOR</span>
