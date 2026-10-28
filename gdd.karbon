@@ -1,0 +1,715 @@
+# GAME DESIGN DOCUMENT (GDD)
+# CARBON CODE: The Hydrocarbon Mystery
+
+**Versi:** 1.0 — Rancangan Pengembangan  
+**Genre:** Educational Puzzle / Logic Puzzle  
+**Visual:** Pixel Art 2D  
+**Platform:** Web Desktop  
+**Target Pengembangan:** Menengah  
+**Materi Utama:** Tata Nama dan Rumus Hidrokarbon  
+**Target Pemain:** Pelajar SMA yang mempelajari kimia hidrokarbon
+
+---
+
+## 1. HIGH CONCEPT
+
+### 1.1 Deskripsi Game
+
+Carbon Code adalah game puzzle edukasi 2D berbasis pixel art yang mengajak pemain menyelesaikan teka-teki kimia melalui penyusunan struktur molekul, identifikasi rumus molekul, dan penentuan nama hidrokarbon.
+
+Pemain berperan sebagai asisten laboratorium digital yang bertugas memulihkan arsip molekul yang rusak. Informasi berupa struktur, rumus, dan nama senyawa tersebar dalam berbagai puzzle. Pemain harus menghubungkan informasi tersebut menggunakan aturan kimia yang benar.
+
+Berbeda dari game kuis biasa, pemain berinteraksi langsung dengan struktur molekul melalui antarmuka puzzle. Pemain dapat menambahkan atom karbon, menghubungkan atom dengan ikatan, mengamati jumlah hidrogen yang terbentuk, dan memecahkan teka-teki tata nama.
+
+### 1.2 Tujuan Utama
+
+- Memahami hubungan antara struktur, rumus molekul, dan nama hidrokarbon.
+- Melatih kemampuan berpikir logis melalui puzzle bertahap.
+- Memberikan pengalaman belajar kimia yang interaktif.
+- Menghadirkan game edukasi yang bisa dimainkan langsung melalui browser.
+
+### 1.3 Pilar Desain
+
+**Belajar melalui gameplay:** pemain memahami kimia dengan menyelesaikan masalah, bukan hanya membaca teori.
+
+**Puzzle yang masuk akal:** setiap tantangan memiliki aturan, tujuan, dan jawaban yang dapat divalidasi.
+
+**Progres yang jelas:** tingkat kesulitan berkembang secara bertahap dari senyawa sederhana hingga struktur bercabang.
+
+**Feedback yang mendidik:** kesalahan memberikan petunjuk untuk memperbaiki pemahaman.
+
+---
+
+## 2. CERITA DAN LATAR DUNIA
+
+### 2.1 Premis
+
+Di dalam Laboratorium Carbon Code terdapat sistem arsip yang menyimpan data berbagai senyawa hidrokarbon. Sistem tersebut mengalami kerusakan sehingga sebagian struktur molekul, rumus, dan nama senyawa menjadi tidak lengkap.
+
+Pemain adalah asisten peneliti baru yang bertugas memulihkan data tersebut.
+
+Setiap laboratorium memiliki kumpulan puzzle. Ketika pemain menyelesaikan tantangan, arsip akan pulih dan wilayah laboratorium berikutnya terbuka.
+
+### 2.2 Gaya Cerita
+
+Cerita berfungsi sebagai penghubung antarlevel dan alasan pemain melanjutkan permainan. Cerita tidak mengambil alih fokus utama dari puzzle kimia.
+
+Dialog dibuat pendek, dengan karakter mentor ilmuwan digital yang memberikan instruksi, petunjuk, dan penjelasan setelah puzzle selesai.
+
+### 2.3 Dunia Game
+
+Dunia dibagi menjadi lima zona:
+
+1. Carbon Basics Lab
+2. Bond Research Lab
+3. Naming Database
+4. Isomer Chamber
+5. Master Chemistry Lab
+
+Setiap zona memiliki latar pixel art, variasi warna, jenis puzzle, dan materi pembelajaran yang berbeda.
+
+---
+
+## 3. PLATFORM DAN KONTROL
+
+### 3.1 Platform
+
+Game berjalan pada browser desktop menggunakan HTML, CSS, JavaScript, dan Phaser 3.
+
+Game tidak membutuhkan instalasi aplikasi desktop. Untuk versi awal, progres dapat disimpan di browser menggunakan localStorage.
+
+### 3.2 Kontrol Pemain
+
+| Kontrol | Fungsi |
+|---|---|
+| Klik kiri | Memilih atom, ikatan, atau komponen nama |
+| Drag and drop | Memindahkan atom ke area puzzle |
+| Klik atom lalu atom lain | Menghubungkan dua atom |
+| Pilih tombol ikatan | Menentukan ikatan tunggal, rangkap dua, atau rangkap tiga |
+| Klik kanan atau tombol hapus | Menghapus elemen yang dipilih |
+| Ctrl + Z | Membatalkan tindakan terakhir |
+| Tombol Periksa | Memvalidasi jawaban |
+| Tombol Petunjuk | Menampilkan bantuan bertahap |
+| Tombol Reset | Mengulang puzzle |
+| Escape | Membuka menu jeda |
+
+Pada perangkat tanpa tombol klik kanan, fungsi hapus juga tersedia melalui tombol antarmuka.
+
+### 3.3 Tampilan
+
+Resolusi target pengembangan adalah 1280 × 720 piksel dengan tata letak yang dapat menyesuaikan ukuran jendela browser.
+
+Antarmuka menggunakan tema laboratorium pixel art, panel informasi yang mudah dibaca, ikon yang jelas, serta animasi sederhana.
+
+---
+
+## 4. GAMEPLAY UTAMA
+
+### 4.1 Konsep Inti
+
+Gameplay utama berpusat pada tiga jenis puzzle yang saling berhubungan:
+
+1. Structure Builder
+2. Formula Detective
+3. Name Decoder
+
+Masing-masing menguji kemampuan yang berbeda, tetapi semuanya menggunakan aturan kimia yang konsisten.
+
+### 4.2 Puzzle A — Structure Builder
+
+**Tujuan:** Membentuk struktur hidrokarbon sesuai nama senyawa atau target yang diberikan.
+
+Contoh misi:
+
+> Buat struktur 2-metilpropana.
+
+Pemain melakukan langkah berikut:
+
+1. Membaca nama senyawa yang menjadi target.
+2. Menentukan rantai utama.
+3. Menambahkan atom karbon pada kanvas.
+4. Menghubungkan atom menggunakan ikatan yang sesuai.
+5. Mengatur percabangan sesuai nama target.
+6. Mengamati jumlah hidrogen yang dihitung otomatis.
+7. Menekan tombol Periksa.
+
+Jika struktur benar, puzzle selesai.
+
+Jika struktur salah, game menunjukkan bagian yang perlu diperbaiki, seperti jumlah karbon, posisi cabang, atau jenis ikatan.
+
+**Keputusan desain:** hidrogen tidak harus disusun satu per satu dalam mode utama. Jumlah hidrogen dihitung otomatis berdasarkan ikatan karbon agar pemain lebih fokus pada struktur dan tata nama. Tutorial dapat menampilkan hidrogen secara eksplisit untuk menjelaskan konsep valensi.
+
+### 4.3 Puzzle B — Formula Detective
+
+**Tujuan:** Membentuk atau mengidentifikasi hidrokarbon dari rumus molekul dan petunjuk tambahan.
+
+Contoh misi:
+
+> Bentuk hidrokarbon rantai terbuka golongan alkana dengan rumus C₄H₁₀.
+
+Pemain menyusun empat atom karbon, membuat ikatan yang valid, lalu memeriksa apakah rumus hasilnya sesuai.
+
+Untuk rumus yang memiliki lebih dari satu isomer, game harus menentukan tujuan secara jelas. Level dapat meminta satu struktur tertentu melalui petunjuk tambahan, menerima semua struktur valid yang sesuai, atau meminta pemain menemukan semua isomernya.
+
+Contohnya, C₄H₁₀ mempunyai dua isomer struktur: butana dan 2-metilpropana. Keduanya tidak boleh dinilai salah hanya karena bentuk strukturnya berbeda.
+
+### 4.4 Puzzle C — Name Decoder
+
+**Tujuan:** Menentukan nama hidrokarbon dari struktur yang ditampilkan.
+
+Pemain menerima gambar struktur molekul, kemudian menyusun nama menggunakan potongan jawaban.
+
+Komponen yang dapat dipilih meliputi:
+
+- Nama rantai utama.
+- Nomor posisi ikatan rangkap.
+- Nama substituen atau cabang.
+- Nomor posisi substituen.
+- Akhiran nama senyawa.
+
+Contoh:
+
+Struktur menampilkan rantai utama tiga atom karbon dengan satu cabang metil pada karbon nomor dua.
+
+Pemain menyusun nama:
+
+**2-metilpropana**
+
+Game memeriksa nama berdasarkan aturan tata nama yang berlaku pada cakupan materi level tersebut, bukan sekadar mencocokkan huruf secara mentah.
+
+---
+
+## 5. MEKANIK MOLECULE BUILDER
+
+### 5.1 Area Kerja
+
+Area puzzle dibagi menjadi beberapa panel:
+
+**Panel kiri — Instruksi**
+- Tujuan misi.
+- Target nama atau rumus.
+- Petunjuk singkat.
+- Materi kimia yang sedang diuji.
+
+**Panel tengah — Molecular Grid**
+- Area tempat menyusun struktur.
+- Atom karbon sebagai node.
+- Ikatan sebagai garis penghubung.
+- Percabangan ditampilkan dengan jelas.
+- Posisi atom dapat dipindahkan tanpa mengubah hubungan kimianya.
+
+**Panel kanan — Molecular Inspector**
+- Jumlah atom karbon.
+- Jumlah hidrogen hasil perhitungan.
+- Rumus molekul.
+- Jumlah ikatan tunggal, rangkap dua, dan rangkap tiga.
+- Status validasi.
+
+**Panel bawah — Action Bar**
+- Pilih atom karbon.
+- Pilih jenis ikatan.
+- Hapus.
+- Undo.
+- Reset.
+- Petunjuk.
+- Periksa.
+
+### 5.2 Cara Membuat Molekul
+
+1. Pemain memilih atom C dari panel alat.
+2. Atom ditempatkan pada grid.
+3. Pemain memilih jenis ikatan.
+4. Pemain menghubungkan dua atom karbon.
+5. Sistem menghitung jumlah hidrogen yang mungkin terbentuk.
+6. Rumus molekul diperbarui secara otomatis.
+7. Pemain mengirim jawaban untuk divalidasi.
+
+Tampilan atom sebaiknya menggunakan label huruf dan garis ikatan yang berbeda. Informasi penting tidak boleh disampaikan hanya melalui warna.
+
+### 5.3 Ikatan Kimia
+
+Pemain dapat memilih tiga jenis ikatan:
+
+- Ikatan tunggal: C–C
+- Ikatan rangkap dua: C=C
+- Ikatan rangkap tiga: C≡C
+
+Untuk versi awal, sistem mendukung hidrokarbon rantai terbuka. Struktur siklik belum termasuk cakupan MVP.
+
+### 5.4 Sistem Hidrogen Otomatis
+
+Setiap atom karbon dianggap memiliki valensi empat.
+
+Sistem menghitung total orde ikatan karbon tersebut. Ikatan tunggal bernilai satu, ikatan rangkap dua bernilai dua, dan ikatan rangkap tiga bernilai tiga.
+
+Jumlah hidrogen pada karbon dihitung menggunakan:
+
+**Jumlah H = 4 − total orde ikatan pada karbon**
+
+Contoh etena:
+
+- Terdapat dua atom karbon.
+- Kedua karbon dihubungkan oleh ikatan rangkap dua.
+- Setiap karbon memiliki dua hidrogen.
+- Hasilnya adalah C₂H₄.
+
+Jika jumlah hidrogen negatif, atom karbon terhubung secara tidak valid dan struktur ditolak.
+
+### 5.5 Validasi Struktur
+
+Ketika tombol Periksa ditekan, sistem memeriksa secara berurutan:
+
+1. Apakah struktur terhubung menjadi satu molekul?
+2. Apakah setiap karbon memenuhi batas valensi?
+3. Apakah jumlah atom dan ikatan sesuai dengan target?
+4. Apakah rumus molekul sesuai?
+5. Apakah struktur memenuhi syarat kategori senyawa?
+6. Apakah struktur sesuai dengan jawaban atau petunjuk misi?
+
+Sistem membandingkan hubungan atom dan jenis ikatannya, bukan hanya posisi gambar di layar. Karena itu, struktur yang sama dengan susunan visual berbeda tetap dapat dinilai benar.
+
+---
+
+## 6. SISTEM TATA NAMA HIDROKARBON
+
+### 6.1 Cakupan Materi
+
+Materi berkembang secara bertahap dari konsep sederhana hingga struktur bercabang.
+
+**Alkana**
+- Metana
+- Etana
+- Propana
+- Butana
+- Pentana
+- Heksana dan seterusnya sesuai cakupan level
+
+**Alkena**
+- Etena
+- Propena
+- Butena
+- Posisi ikatan rangkap
+
+**Alkuna**
+- Etuna
+- Propuna
+- Butuna
+- Posisi ikatan rangkap tiga
+
+**Senyawa bercabang**
+- Metil
+- Etil
+- Posisi substituen
+- Penentuan rantai utama
+
+### 6.2 Aturan Dasar yang Diterapkan
+
+1. Tentukan rantai induk yang memenuhi kriteria tata nama untuk jenis senyawa tersebut.
+2. Untuk senyawa berikatan rangkap, rantai induk harus memenuhi prioritas pemilihan yang relevan terhadap ikatan rangkap.
+3. Tentukan penomoran yang memberikan posisi terendah sesuai prioritas aturan tata nama.
+4. Identifikasi dan beri nomor pada cabang.
+5. Susun nama dengan awalan, posisi, nama substituen, dan akhiran yang sesuai.
+6. Validasi nama berdasarkan aturan yang telah diterapkan pada level.
+
+Untuk konsistensi pembelajaran di Indonesia, tampilan utama menggunakan ejaan seperti metana, etena, etuna, metil, dan etil. Variasi penulisan yang benar, seperti 1-butena dan but-1-ena, dapat diterima sebagai variasi nama yang setara.
+
+### 6.3 Pembatasan Nomenklatur
+
+Versi pertama tidak harus mendukung seluruh sistem nomenklatur organik.
+
+Cakupan awal dibatasi pada:
+- Hidrokarbon rantai terbuka.
+- Alkana dengan percabangan sederhana.
+- Alkena dengan satu ikatan rangkap dua.
+- Alkuna dengan satu ikatan rangkap tiga.
+- Penamaan posisi ikatan dan substituen.
+- Isomer struktur sederhana.
+
+Cincin, stereoisomer, banyak ikatan rangkap, dan kasus tata nama tingkat lanjut ditunda hingga versi berikutnya.
+
+---
+
+## 7. SISTEM LEVEL DAN PROGRES
+
+Total desain jangka panjang adalah 25 level dalam lima zona. Versi pertama cukup berisi 6–8 level yang berfungsi dengan baik.
+
+| Zona | Level | Fokus |
+|---|---:|---|
+| Carbon Basics | 1–5 | Atom, valensi, rumus, dan alkana dasar |
+| Bond Research | 6–10 | Ikatan tunggal, rangkap dua, dan rangkap tiga |
+| Naming Database | 11–15 | Rantai utama, nomor posisi, dan tata nama |
+| Isomer Chamber | 16–20 | Percabangan dan isomer struktur |
+| Master Lab | 21–25 | Kombinasi semua mekanik |
+
+### 7.1 Contoh Level Awal
+
+**Level 1 — Methane**
+
+Pemain mengidentifikasi struktur dan rumus metana, CH₄.
+
+**Level 2 — Carbon Chain**
+
+Pemain membuat etana dan propana serta memahami hubungan jumlah karbon dan hidrogen.
+
+**Level 3 — Bond Detector**
+
+Pemain membedakan alkana, alkena, dan alkuna dari jenis ikatan.
+
+**Level 4 — Structure Builder**
+
+Pemain menyusun struktur butana berdasarkan nama yang diberikan.
+
+**Level 5 — Branching Point**
+
+Pemain menyusun 2-metilpropana dengan rantai utama dan percabangan yang benar.
+
+**Level 6 — Formula Detective**
+
+Pemain membuat molekul sesuai rumus dan kategori senyawa yang ditentukan.
+
+**Level 7 — Name Decoder**
+
+Pemain menentukan nama senyawa dari struktur dengan posisi ikatan rangkap.
+
+**Level 8 — Lab Challenge**
+
+Pemain menyelesaikan kombinasi penyusunan struktur, pemeriksaan rumus, dan tata nama.
+
+### 7.2 Membuka Level
+
+Level baru terbuka setelah pemain menyelesaikan level sebelumnya. Tidak ada sistem energi atau batas percobaan yang menghalangi pemain untuk belajar.
+
+Setiap penyelesaian memberikan XP dan bintang berdasarkan ketepatan serta penggunaan petunjuk.
+
+---
+
+## 8. SISTEM SKOR DAN PETUNJUK
+
+### 8.1 Sistem Bintang
+
+- **3 bintang:** jawaban benar dengan sedikit percobaan dan tanpa petunjuk.
+- **2 bintang:** jawaban benar setelah beberapa percobaan atau menggunakan satu petunjuk.
+- **1 bintang:** level diselesaikan menggunakan bantuan tambahan.
+
+Waktu penyelesaian tidak menjadi faktor utama agar pemain tidak terburu-buru memahami materi.
+
+### 8.2 Sistem Petunjuk
+
+Petunjuk diberikan secara bertahap:
+
+**Petunjuk 1 — Konsep**
+
+Menjelaskan konsep yang relevan, misalnya bahwa rantai utama harus dipilih berdasarkan aturan tata nama.
+
+**Petunjuk 2 — Langkah**
+
+Memberikan arahan seperti jumlah karbon pada rantai induk atau prioritas ikatan rangkap.
+
+**Petunjuk 3 — Bantuan Spesifik**
+
+Menampilkan bagian struktur atau komponen nama yang perlu diperhatikan.
+
+Penggunaan petunjuk mengurangi potensi skor maksimal, tetapi tidak menghentikan progres pemain.
+
+### 8.3 Feedback
+
+Ketika jawaban benar:
+- Struktur menyala.
+- Animasi pemulihan arsip berlangsung.
+- Pemain mendapatkan XP.
+- Penjelasan singkat ditampilkan.
+
+Ketika jawaban salah:
+- Struktur tetap tersedia agar bisa diperbaiki.
+- Kesalahan dijelaskan secara spesifik.
+- Pemain dapat mencoba kembali tanpa mengulang semua pekerjaan.
+
+---
+
+## 9. ANTARMUKA DAN MENU
+
+### 9.1 Main Menu
+
+Berisi:
+- New Game
+- Continue
+- Level Select
+- Molecular Codex
+- Settings
+- Credits
+
+### 9.2 Level Select
+
+Menampilkan peta laboratorium dengan level yang sudah terbuka, level terkunci, peringkat bintang, dan materi setiap zona.
+
+### 9.3 Gameplay Screen
+
+Memuat instruksi, Molecular Grid, Molecular Inspector, Action Bar, dan tombol jeda.
+
+### 9.4 Result Screen
+
+Menampilkan hasil level, rumus dan nama senyawa yang benar, penjelasan kimia, skor, serta tombol lanjut atau coba lagi.
+
+### 9.5 Molecular Codex
+
+Ensiklopedia kecil yang menyimpan materi yang telah ditemukan pemain, termasuk:
+- Rumus umum hidrokarbon.
+- Nama rantai utama.
+- Jenis ikatan.
+- Contoh struktur.
+- Aturan tata nama.
+- Isomer yang telah diselesaikan.
+
+---
+
+## 10. FITUR MVP
+
+MVP adalah versi paling kecil yang sudah dapat dimainkan dari awal hingga akhir level.
+
+### Wajib Ada
+
+1. Main menu dan pemilihan level.
+2. Molecule Builder berbasis grid.
+3. Tiga jenis ikatan dasar.
+4. Perhitungan hidrogen otomatis.
+5. Validasi struktur dan rumus molekul.
+6. Puzzle tata nama melalui pemilihan komponen nama.
+7. Minimal 6–8 level yang telah diuji.
+8. Sistem skor dan bintang.
+9. Petunjuk dan penjelasan jawaban.
+10. Penyimpanan progres di browser.
+11. Tombol reset, undo, dan coba lagi.
+12. Tampilan pixel art 2D yang konsisten.
+
+### Ditunda
+
+- Multiplayer.
+- Leaderboard online.
+- Akun pemain.
+- Editor struktur molekul bebas.
+- Sistem cerita bercabang yang kompleks.
+- Animasi karakter yang sangat detail.
+- Seluruh 25 level lengkap.
+- Dukungan semua jenis nomenklatur organik.
+
+Prinsip utama MVP adalah membangun sedikit fitur dengan kualitas tinggi, bukan banyak fitur yang belum berfungsi dengan benar.
+
+---
+
+## 11. TEKNOLOGI DAN ARSITEKTUR
+
+### 11.1 Teknologi
+
+- HTML: struktur halaman.
+- CSS: tata letak dan antarmuka.
+- JavaScript: logika aplikasi.
+- Phaser 3: scene, input, animasi, dan rendering game.
+- localStorage: penyimpanan progres.
+- JSON atau modul JavaScript: data level.
+
+### 11.2 Struktur Folder
+
+```text
+carbon-code/
+├── index.html
+├── src/
+│   ├── main.js
+│   ├── scenes/
+│   │   ├── MenuScene.js
+│   │   ├── LevelScene.js
+│   │   └── ResultScene.js
+│   ├── chemistry/
+│   │   ├── molecule.js
+│   │   ├── validator.js
+│   │   ├── formula.js
+│   │   └── nomenclature.js
+│   ├── systems/
+│   │   ├── levelManager.js
+│   │   ├── scoreManager.js
+│   │   └── saveManager.js
+│   └── data/
+│       └── levels.js
+└── assets/
+    ├── sprites/
+    ├── tiles/
+    ├── ui/
+    └── audio/
+```
+
+### 11.3 Pembagian Tanggung Jawab
+
+**molecule.js:** mengelola atom dan ikatan.
+
+**formula.js:** menghitung rumus molekul dari struktur.
+
+**validator.js:** memeriksa valensi, konektivitas, dan syarat struktur.
+
+**nomenclature.js:** mengidentifikasi nama senyawa dalam cakupan yang didukung.
+
+**levels.js:** menyimpan instruksi, target, petunjuk, dan solusi level.
+
+**LevelScene.js:** menampilkan interaksi dan menghubungkan input pemain dengan sistem kimia.
+
+Logika kimia harus dipisahkan dari visual. Perubahan animasi tidak boleh mengubah hasil validasi struktur.
+
+---
+
+## 12. RENCANA PENGEMBANGAN
+
+### Minggu 1 — Fondasi
+
+- Menyiapkan proyek Phaser.
+- Membuat main menu dan layar level.
+- Membuat grid dan penempatan atom.
+- Membuat koneksi ikatan.
+
+**Target:** pemain sudah dapat menyusun struktur sederhana.
+
+### Minggu 2 — Sistem Kimia
+
+- Menghitung valensi dan hidrogen.
+- Menghitung rumus molekul.
+- Memeriksa struktur tidak valid.
+- Menguji berbagai kombinasi ikatan.
+
+**Target:** struktur dapat diperiksa secara kimia.
+
+### Minggu 3 — Puzzle Inti
+
+- Mengimplementasikan Structure Builder.
+- Mengimplementasikan Formula Detective.
+- Membuat data level berbasis konfigurasi.
+- Memvalidasi struktur target.
+
+**Target:** minimal tiga level dapat dimainkan sampai selesai.
+
+### Minggu 4 — Tata Nama
+
+- Membuat Name Decoder.
+- Menyusun komponen nama.
+- Mengimplementasikan cakupan nomenklatur awal.
+- Menguji nama rantai dan cabang sederhana.
+
+**Target:** pemain dapat membangun dan memberi nama struktur sederhana.
+
+### Minggu 5 — Progres dan UI
+
+- Menambahkan skor dan bintang.
+- Membuat petunjuk bertahap.
+- Membuat Molecular Codex.
+- Menambahkan penyimpanan progres.
+- Membuat animasi dan efek audio dasar.
+
+**Target:** prototipe memiliki alur permainan yang lengkap.
+
+### Minggu 6 — QA dan Rilis
+
+- Menguji semua puzzle.
+- Memperbaiki bug.
+- Menguji kasus kimia yang ambigu.
+- Menyempurnakan tampilan browser.
+- Merilis build web awal.
+
+**Target:** versi MVP siap dimainkan dan diuji oleh pengguna.
+
+Estimasi enam minggu merupakan target awal, bukan jaminan. Durasi dapat bertambah apabila pengembang masih mempelajari JavaScript, Phaser, atau sistem nomenklatur.
+
+---
+
+## 13. QUALITY ASSURANCE DAN KRITERIA SELESAI
+
+Game dinyatakan memenuhi target MVP apabila:
+
+- Pemain dapat memulai dan menyelesaikan level tanpa bug yang menghalangi progres.
+- Sistem menolak struktur yang melanggar valensi karbon.
+- Jumlah hidrogen dan rumus molekul dihitung konsisten.
+- Struktur yang identik secara kimia dapat diterima meskipun digambar dengan tata letak berbeda.
+- Puzzle dengan beberapa jawaban valid tidak menolak jawaban yang benar.
+- Nama senyawa diperiksa menggunakan aturan yang sesuai dengan cakupan level.
+- Petunjuk dan feedback menjelaskan kesalahan dengan benar.
+- Progres tetap tersimpan setelah browser dimuat ulang.
+- Semua level MVP dapat dimainkan menggunakan mouse dan keyboard.
+- Tampilan tetap terbaca pada ukuran jendela browser yang ditargetkan.
+
+### Kasus Uji Kimia Dasar
+
+| Uji | Hasil yang diharapkan |
+|---|---|
+| Struktur metana | CH₄ |
+| Struktur etana | C₂H₆ |
+| Struktur etena | C₂H₄ |
+| Struktur etuna | C₂H₂ |
+| Butana dan 2-metilpropana | Keduanya memiliki rumus C₄H₁₀ |
+| Karbon dengan total orde ikatan lima | Ditolak |
+| Struktur dengan atom terpisah | Ditolak untuk satu molekul |
+| Struktur valid dengan tata letak berbeda | Tetap diterima jika konektivitas dan ikatannya setara |
+
+---
+
+## 14. BATASAN DAN RISIKO
+
+### Risiko 1 — Jawaban yang Ambigu
+
+Satu rumus molekul dapat mewakili beberapa struktur.
+
+**Solusi:** setiap level harus menentukan apakah pemain mencari struktur tertentu, satu struktur valid, atau semua isomer yang memenuhi syarat.
+
+### Risiko 2 — Aturan Tata Nama Terlalu Kompleks
+
+Nomenklatur organik memiliki banyak aturan dan kasus khusus.
+
+**Solusi:** batasi cakupan sistem berdasarkan materi tiap level. Jangan mengklaim mendukung seluruh IUPAC sebelum implementasi dan pengujiannya lengkap.
+
+### Risiko 3 — Puzzle Terasa Seperti Tugas Sekolah
+
+Terlalu banyak teks dapat mengurangi kesenangan.
+
+**Solusi:** gunakan instruksi singkat, interaksi langsung, animasi, variasi tujuan, dan reward yang tetap menghargai proses belajar.
+
+### Risiko 4 — Sistem Kimia dan Visual Tidak Sinkron
+
+Struktur yang terlihat benar bisa memiliki konektivitas internal yang berbeda.
+
+**Solusi:** gunakan model graf atom dan ikatan sebagai sumber data utama. Tampilan hanya menjadi representasi graf tersebut.
+
+### Risiko 5 — Ruang Lingkup Membesar
+
+Multiplayer, banyak dunia, dan editor bebas dapat menunda rilis.
+
+**Solusi:** prioritaskan validasi kimia, puzzle, dan progres dasar sebelum menambahkan fitur tambahan.
+
+---
+
+## 15. ARAH PENGEMBANGAN SETELAH MVP
+
+Setelah MVP selesai dan mekanik dasarnya stabil, pengembangan dapat dilanjutkan dengan:
+
+**Versi 1.1**
+- Penambahan level alkana bercabang.
+- Variasi puzzle rumus molekul.
+- Peningkatan tutorial interaktif.
+
+**Versi 1.2**
+- Tantangan mencari seluruh isomer struktur.
+- Level bonus dengan batas langkah.
+- Statistik kemampuan pemain.
+
+**Versi 2.0**
+- Struktur yang lebih kompleks.
+- Sikloalkana dan materi lanjutan.
+- Mode tantangan harian.
+- Cerita dan area laboratorium tambahan.
+
+Fitur baru tetap harus melalui pemeriksaan kimia sebelum dirilis.
+
+---
+
+## 16. RINGKASAN VISI GAME
+
+Carbon Code dirancang sebagai game puzzle edukasi yang menjadikan hubungan antara struktur molekul, rumus kimia, dan tata nama sebagai inti pengalaman bermain.
+
+Pemain menyusun struktur pada grid, menghubungkan atom dengan ikatan yang tepat, mengamati rumus yang dihasilkan, dan menyelesaikan tantangan penamaan. Setiap jawaban diperiksa dengan aturan kimia yang sesuai dengan materi yang sedang dipelajari.
+
+**Prioritas pengembangan adalah membuat satu rangkaian puzzle yang benar-benar berfungsi, akurat, mudah dipahami, dan menyenangkan.** Setelah fondasinya stabil, jumlah level, variasi teka-teki, cerita, serta sistem reward dapat dikembangkan secara bertahap.
+
+Dokumen ini menjadi acuan awal untuk desain, pemrograman, pembuatan aset, pengujian, dan pengembangan Carbon Code.

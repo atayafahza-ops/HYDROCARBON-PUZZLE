@@ -1,0 +1,33 @@
+{
+  "name": "carbon-code",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atayafahza-ops/HYDROCARBON-PUZZLE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/atayafahza-ops/HYDROCARBON-PUZZLE/issues"
+  },
+  "homepage": "https://github.com/atayafahza-ops/HYDROCARBON-PUZZLE#readme",
+  "private": "true",
+  "dependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

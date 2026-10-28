@@ -1,0 +1,1416 @@
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* ---------- Large desktop ---------- */
+
+@media (max-width: 1300px) {
+  .screen {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .game-layout {
+    grid-template-columns: minmax(220px, 252px) minmax(0, 1fr) minmax(220px, 252px);
+  }
+
+  .menu-grid {
+    grid-template-columns: minmax(320px, 0.82fr) minmax(420px, 1.18fr);
+  }
+}
+
+/* ---------- Small desktop / landscape tablet ---------- */
+
+@media (max-width: 1120px) {
+  .subbar__stats .top-stat--safe {
+    display: none;
+  }
+
+  .game-heading .eyebrow {
+    font-size: 8.5px;
+  }
+
+  .tool-btn {
+    min-width: 50px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .tool-btn--util {
+    min-width: 48px;
+  }
+
+  .action-check {
+    min-width: 96px;
+  }
+
+  .briefing {
+    padding: 10px;
+  }
+
+  .inspector,
+  .intel-panel {
+    padding: 9px;
+  }
+
+  .codex-book {
+    grid-template-columns: 264px minmax(0, 1fr);
+  }
+
+  .codex-spine {
+    left: 260px;
+  }
+
+  .result-grid {
+    grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .result-hero {
+    padding: 17px 18px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .game-layout {
+    grid-template-columns: minmax(208px, 232px) minmax(0, 1fr) minmax(208px, 232px);
+  }
+
+  .action-bar {
+    gap: 8px;
+    padding: 6px 7px;
+  }
+
+  .action-tools {
+    gap: 4px;
+  }
+
+  .tool-btn__label {
+    font-size: 7.5px;
+  }
+
+  .tool-btn kbd {
+    display: none;
+  }
+
+  .map-head__copy p {
+    font-size: 9.5px;
+  }
+
+  .level-node__title {
+    font-size: 8.5px;
+  }
+
+  .level-node__type {
+    font-size: 6px;
+  }
+
+  .menu-btn {
+    min-height: 56px;
+  }
+
+  .menu-btn__copy strong {
+    font-size: 9px;
+  }
+}
+
+/* ---------- Compact layout: stack screens that need more width ---------- */
+
+@media (max-width: 980px) {
+  .screen {
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .menu-screen,
+  .levels-screen,
+  .codex-screen,
+  .game-screen,
+  .result-screen {
+    overflow: visible;
+  }
+
+  /* --- Game becomes two columns with page scroll --- */
+
+  .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 250px);
+    grid-template-rows: minmax(420px, auto) auto auto;
+    grid-template-areas:
+      'workspace workspace'
+      'briefing side'
+      'actions actions';
+    flex: none;
+  }
+
+  .workspace {
+    min-height: 440px;
+  }
+
+  .builder-stage {
+    min-height: 330px;
+  }
+
+  .briefing {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .side-stack {
+    grid-template-rows: auto auto;
+  }
+
+  .side-stack--name {
+    grid-template-rows: auto auto;
+  }
+
+  .action-bar {
+    position: sticky;
+    bottom: 8px;
+    z-index: 20;
+    flex-wrap: wrap;
+    background:
+      linear-gradient(180deg, rgba(9, 32, 45, 0.99), rgba(3, 14, 22, 0.99));
+  }
+
+  .game-footer {
+    padding-bottom: 4px;
+  }
+
+  /* --- Levels become single column --- */
+
+  .levels-grid {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+  }
+
+  .zone-panel {
+    overflow: visible;
+  }
+
+  .zone-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+
+  .zone-tab {
+    min-width: 196px;
+    flex: 0 0 auto;
+  }
+
+  .zone-panel-note {
+    display: none;
+  }
+
+  .map-legend {
+    margin-top: 8px;
+  }
+
+  .map-panel {
+    overflow: visible;
+  }
+
+  .level-map {
+    min-height: 230px;
+  }
+
+  /* --- Codex becomes single column --- */
+
+  .codex-main {
+    overflow: visible;
+  }
+
+  .codex-book {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+  }
+
+  .codex-spine {
+    display: none;
+  }
+
+  .codex-index {
+    border-right: 0;
+    border-bottom: 1px solid #1b3947;
+    overflow: visible;
+  }
+
+  .codex-cover {
+    display: none;
+  }
+
+  .codex-index__label {
+    margin-top: 0;
+  }
+
+  .codex-index__nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+
+  .codex-index__btn {
+    flex: 0 0 auto;
+    min-width: 188px;
+    border: 1px solid var(--line-soft);
+  }
+
+  .codex-progress {
+    margin-top: 9px;
+  }
+
+  .codex-progress__head {
+    margin-bottom: 4px;
+  }
+
+  .codex-cta {
+    width: auto;
+    align-self: flex-start;
+    margin-top: 6px;
+  }
+
+  .codex-page-wrap {
+    min-height: 560px;
+  }
+
+  .codex-page {
+    min-height: 430px;
+  }
+
+  /* --- Result becomes single column --- */
+
+  .result-grid {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+  }
+
+  .result-hero {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .result-detail {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .result-compound,
+  .result-explanation {
+    overflow: visible;
+  }
+
+  .result-compound__body {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.8fr);
+  }
+
+  .result-paper {
+    min-height: 180px;
+  }
+
+  .result-hero > h1 {
+    font-size: 34px;
+  }
+
+  .result-action-block {
+    margin-top: 4px;
+  }
+}
+
+/* ---------- Menu stacks below 860 ---------- */
+
+@media (max-width: 860px) {
+  .menu-header {
+    align-items: flex-start;
+  }
+
+  .header-side {
+    padding-top: 4px;
+  }
+
+  .header-caption {
+    display: none;
+  }
+
+  .menu-grid {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    gap: 12px;
+  }
+
+  .mentor-column {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: stretch;
+  }
+
+  .mentor-art {
+    min-height: 230px;
+  }
+
+  .mentor-img {
+    object-position: center 12%;
+  }
+
+  .dialog-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .dialog-text {
+    min-height: 0;
+    font-size: 13px;
+  }
+
+  .menu-panel {
+    overflow: visible;
+  }
+
+  .menu-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .menu-row-split {
+    grid-column: 1 / -1;
+  }
+
+  .save-summary {
+    margin-top: 2px;
+  }
+
+  .menu-footer {
+    margin-top: 2px;
+  }
+
+  .result-compound__body {
+    grid-template-columns: 1fr;
+  }
+
+  .result-paper {
+    min-height: 150px;
+  }
+
+  .result-info {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .result-info__name {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Game: tighter two-column ---------- */
+
+@media (max-width: 760px) {
+  .game-screen {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      'workspace'
+      'side'
+      'briefing'
+      'actions';
+  }
+
+  .workspace {
+    min-height: 460px;
+  }
+
+  .builder-stage {
+    min-height: 350px;
+  }
+
+  .side-stack {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+
+  .side-stack--name {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .intel-panel {
+    min-height: 120px;
+  }
+
+  .name-stage {
+    min-height: 440px;
+  }
+
+  .paper-deck {
+    min-height: 240px;
+  }
+
+  .action-bar {
+    padding: 7px;
+  }
+
+  .action-tools {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .action-tools--end {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .action-divider {
+    display: none;
+  }
+
+  .action-check {
+    margin-left: auto;
+  }
+
+  .action-note {
+    width: 100%;
+  }
+
+  .game-topbar__right .star-forecast__label {
+    display: none;
+  }
+
+  .game-heading .badge {
+    display: none;
+  }
+
+  .game-autosave {
+    display: none;
+  }
+
+  .game-footer {
+    justify-content: center;
+  }
+
+  .level-slots {
+    gap: 8px;
+  }
+
+  .level-node {
+    max-width: 92px;
+  }
+
+  .level-node__title {
+    font-size: 8px;
+  }
+
+  .map-rail {
+    left: 5%;
+    right: 5%;
+  }
+
+  .map-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+  }
+
+  .map-info__actions {
+    width: 100%;
+  }
+
+  .map-info__actions .btn {
+    width: 100%;
+  }
+
+  .subbar__stats .top-stat:not(:first-child) {
+    display: none;
+  }
+
+  .subbar__title h1 {
+    font-size: 12px;
+  }
+
+  .subbar .eyebrow {
+    font-size: 8px;
+  }
+
+  .codex-chapter {
+    gap: 9px;
+  }
+
+  .codex-chapter__index {
+    font-size: 24px;
+  }
+
+  .codex-concept-grid,
+  .formula-cards,
+  .bond-codex-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .formula-card > strong {
+    font-size: 14px;
+  }
+
+  .codex-gallery {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .naming-tables {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .naming-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .isomer-compare {
+    gap: 5px;
+  }
+
+  .valence-diagram {
+    flex-wrap: wrap;
+  }
+
+  .valence-diagram p {
+    margin-left: 0;
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .result-info {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .result-explanation__body {
+    flex-direction: column;
+  }
+
+  .nova-quote {
+    width: 100%;
+    height: 92px;
+    flex-basis: auto;
+  }
+
+  .nova-quote img {
+    object-position: center 22%;
+  }
+
+  .mentor-dialog {
+    grid-template-columns: 1fr;
+  }
+
+  .mentor-dialog__portrait {
+    min-height: 190px;
+  }
+
+  .mentor-dialog__portrait img {
+    object-position: center 18%;
+  }
+
+  .controls-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal__body {
+    padding: 12px 13px;
+  }
+
+  .modal__head {
+    padding: 13px 13px 10px;
+  }
+
+  .modal__actions {
+    padding: 10px 13px;
+  }
+
+  .modal {
+    max-height: 92vh;
+  }
+}
+
+/* ---------- Small tablets / large phones ---------- */
+
+@media (max-width: 640px) {
+  .screen {
+    padding: 12px 10px 8px;
+    gap: 10px;
+  }
+
+  .logo-title {
+    font-size: clamp(22px, 7.2vw, 31px);
+  }
+
+  .logo-sub {
+    font-size: 8px;
+    letter-spacing: 0.3em;
+  }
+
+  .logo-molecule {
+    display: none;
+  }
+
+  .brand-kicker {
+    font-size: 8px;
+  }
+
+  .menu-header {
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .header-side {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .mentor-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mentor-art {
+    min-height: 260px;
+  }
+
+  .menu-buttons {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .menu-row-split {
+    grid-column: auto;
+  }
+
+  .menu-btn {
+    min-height: 55px;
+  }
+
+  .menu-btn__copy strong {
+    font-size: 9.5px;
+  }
+
+  .subbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .subbar__title {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .subbar__title h1 {
+    white-space: normal;
+  }
+
+  .subbar__stats {
+    margin-left: auto;
+  }
+
+  .zone-panel,
+  .map-panel {
+    padding: 11px;
+  }
+
+  .map-head {
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  .map-head__stats {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 0;
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+
+  .map-zone-badge {
+    width: 42px;
+    height: 42px;
+  }
+
+  .map-head__copy h2 {
+    font-size: 11px;
+  }
+
+  .level-map {
+    min-height: 0;
+    padding: 10px 8px 0;
+  }
+
+  .level-slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px 8px;
+    height: auto;
+    padding-bottom: 20px;
+  }
+
+  .level-slots .level-slot:nth-child(even) {
+    padding-top: 0;
+  }
+
+  .map-rail {
+    display: none;
+  }
+
+  .level-node {
+    max-width: 130px;
+  }
+
+  .level-node__title {
+    font-size: 9px;
+  }
+
+  .codex-index__btn {
+    min-width: 162px;
+  }
+
+  .codex-page {
+    padding: 14px 13px;
+  }
+
+  .codex-chapter h2 {
+    font-size: 11.5px;
+  }
+
+  .codex-lead {
+    font-size: 11px;
+  }
+
+  .codex-page-head {
+    font-size: 6px;
+  }
+
+  .codex-page-wrap {
+    min-height: 520px;
+    padding: 8px 9px;
+  }
+
+  .bond-example-grid,
+  .isomer-compare {
+    grid-template-columns: 1fr;
+  }
+
+  .isomer-divider {
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .isomer-divider > span {
+    width: 22px;
+    height: 22px;
+  }
+
+  .naming-example {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .naming-example .codex-structure {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .codex-pager {
+    padding-top: 5px;
+  }
+
+  .pager-btn span {
+    display: none;
+  }
+
+  .pager-btn {
+    min-width: 34px;
+    justify-content: center;
+  }
+
+  .game-screen {
+    gap: 9px;
+  }
+
+  .game-topbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+
+  .game-topbar__left {
+    width: 100%;
+  }
+
+  .game-topbar__right {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .topbar-sep {
+    display: none;
+  }
+
+  .star-forecast {
+    padding: 3px 7px;
+  }
+
+  .game-heading h1 {
+    font-size: 12px;
+  }
+
+  .game-heading .eyebrow {
+    font-size: 7px;
+  }
+
+  .workspace {
+    padding: 8px;
+  }
+
+  .workspace-head h2 {
+    font-size: 9px;
+  }
+
+  .active-bond {
+    font-size: 6px;
+  }
+
+  .builder-stage {
+    min-height: 300px;
+  }
+
+  .grid-hint {
+    font-size: 6px;
+    padding: 3px 6px;
+  }
+
+  .side-stack {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .inspector-counts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .name-stage {
+    min-height: 0;
+  }
+
+  .paper-deck {
+    min-height: 220px;
+    flex: 0 0 auto;
+  }
+
+  .name-slots {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .name-assembly__hint {
+    display: none;
+  }
+
+  .token-scroll {
+    max-height: 260px;
+  }
+
+  .tool-btn {
+    flex: 1;
+    min-width: 48px;
+    height: 45px;
+  }
+
+  .action-check {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .action-cta {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .action-tools--end .tool-btn {
+    flex: 0 1 58px;
+  }
+
+  .game-keys {
+    font-size: 7px;
+  }
+
+  .result-topbar {
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .result-topbar__title {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .result-topbar__stats {
+    margin-left: auto;
+  }
+
+  .result-hero {
+    padding: 14px;
+  }
+
+  .hero-orbit {
+    right: -6px;
+    width: 180px;
+    height: 180px;
+  }
+
+  .result-hero > h1 {
+    font-size: 28px;
+  }
+
+  .result-stars .star .icon-star {
+    width: 38px;
+    height: 38px;
+  }
+
+  .result-secondary-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .result-compound,
+  .result-explanation {
+    padding: 10px;
+  }
+
+  .result-explanation__foot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .result-confetti {
+    display: none;
+  }
+
+  .screen-footer {
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 8px;
+  }
+
+  .footer-version {
+    font-size: 7px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .settings-row__copy span {
+    font-size: 8px;
+  }
+
+  .settings-danger {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .credits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toast-root {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    align-items: stretch;
+  }
+
+  .toast {
+    width: 100%;
+  }
+}
+
+/* ---------- Small phones ---------- */
+
+@media (max-width: 440px) {
+  .brand-lockup {
+    gap: 8px;
+  }
+
+  .logo-title {
+    font-size: 21px;
+  }
+
+  .logo-code {
+    margin-left: 2px;
+    padding: 1px 5px 3px;
+  }
+
+  .mentor-art {
+    min-height: 220px;
+  }
+
+  .top-stat {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  .subbar__back span {
+    display: none;
+  }
+
+  .subbar__back {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .subbar__stats {
+    gap: 4px;
+  }
+
+  .zone-tab {
+    min-width: 168px;
+  }
+
+  .level-node {
+    max-width: 112px;
+  }
+
+  .level-node__title {
+    font-size: 8px;
+  }
+
+  .game-heading .eyebrow {
+    max-width: 60vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .game-back {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .game-back span {
+    display: none;
+  }
+
+  .game-topbar__right {
+    justify-content: space-between;
+  }
+
+  .builder-stage {
+    min-height: 260px;
+  }
+
+  .name-slots {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .name-slot {
+    flex-direction: row;
+    justify-content: space-between;
+    min-height: 34px;
+    padding: 4px 8px;
+  }
+
+  .name-slot__label {
+    text-align: left;
+  }
+
+  .tool-btn {
+    height: 43px;
+    min-width: 44px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .tool-btn__label {
+    font-size: 7px;
+  }
+
+  .action-tools--end .tool-btn {
+    flex: 1 1 42px;
+  }
+
+  .result-run-stats {
+    gap: 2px;
+  }
+
+  .result-run-stats small {
+    font-size: 5.5px;
+  }
+
+  .result-info {
+    grid-template-columns: 1fr;
+  }
+
+  .result-info__name {
+    grid-column: auto;
+  }
+
+  .result-paper {
+    min-height: 126px;
+  }
+
+  .modal__title {
+    font-size: 11px;
+  }
+
+  .pause-btn {
+    min-height: 42px;
+  }
+
+  .mentor-dialog__portrait {
+    min-height: 150px;
+  }
+
+  .codex-index__nav {
+    gap: 3px;
+  }
+
+  .codex-index__btn {
+    min-width: 148px;
+  }
+
+  .codex-index__copy strong {
+    font-size: 9.5px;
+  }
+
+  .codex-table {
+    font-size: 9.5px;
+  }
+
+  .codex-table th {
+    font-size: 6px;
+  }
+
+  .substituent-chip-row .name-token {
+    min-height: 25px;
+    font-size: 9.5px;
+  }
+}
+
+/* ---------- Short viewports ---------- */
+
+@media (min-width: 981px) and (max-height: 760px) {
+  .game-screen {
+    padding-top: 9px;
+    padding-bottom: 6px;
+    gap: 8px;
+  }
+
+  .game-topbar {
+    min-height: 42px;
+    padding-bottom: 7px;
+  }
+
+  .game-layout {
+    gap: 8px;
+  }
+
+  .action-bar {
+    min-height: 56px;
+    padding: 5px 8px;
+  }
+
+  .tool-btn {
+    height: 44px;
+  }
+
+  .action-check {
+    height: 44px;
+  }
+
+  .action-cta {
+    height: 41px;
+  }
+
+  .game-footer {
+    min-height: 14px;
+    font-size: 7.5px;
+  }
+
+  .menu-header {
+    padding-bottom: 9px;
+  }
+
+  .brand-kicker {
+    margin-bottom: 7px;
+  }
+
+  .menu-grid {
+    gap: 16px;
+  }
+
+  .menu-btn {
+    min-height: 53px;
+  }
+
+  .dialog-text {
+    font-size: 12px;
+  }
+
+  .codex-cover {
+    padding: 9px 11px;
+  }
+
+  .codex-cover h2 {
+    font-size: 13px;
+    margin: 6px 0 4px;
+  }
+
+  .codex-cover p {
+    font-size: 9px;
+  }
+
+  .codex-index__btn {
+    min-height: 34px;
+  }
+
+  .codex-page {
+    padding-top: 17px;
+    padding-bottom: 17px;
+  }
+
+  .result-hero {
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+
+  .result-hero > h1 {
+    font-size: 34px;
+    margin: 5px 0;
+  }
+
+  .result-stars {
+    margin-top: 7px;
+  }
+
+  .result-run-stats {
+    margin: 8px 0 7px;
+    padding: 6px 0;
+  }
+
+  .result-xp {
+    padding: 6px 9px;
+  }
+
+  .result-action-block {
+    padding-top: 9px;
+  }
+
+  .result-compound,
+  .result-explanation {
+    padding: 9px 11px;
+  }
+
+  .result-paper {
+    min-height: 108px;
+  }
+}
+
+@media (min-width: 981px) and (max-height: 660px) {
+  .game-footer {
+    display: none;
+  }
+
+  .menu-footer {
+    display: none;
+  }
+
+  .brand-kicker {
+    display: none;
+  }
+
+  .logo-sub {
+    margin-top: 5px;
+  }
+
+  .menu-btn {
+    min-height: 48px;
+  }
+
+  .menu-btn__icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .dialog-card {
+    padding: 8px 11px;
+  }
+
+  .dialog-text {
+    min-height: 30px;
+    margin: 5px 0 2px;
+    font-size: 11px;
+  }
+
+  .codex-cover p {
+    display: none;
+  }
+
+  .result-star-caption {
+    display: none;
+  }
+
+  .result-hero > h1 {
+    font-size: 29px;
+  }
+
+  .result-stars .star .icon-star {
+    width: 42px;
+    height: 42px;
+  }
+
+  .result-file {
+    display: none;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ambient-particles span,
+  .result-confetti {
+    display: none;
+  }
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html.reduce-motion .ambient-particles span,
+html.reduce-motion .result-confetti {
+  display: none;
+}
