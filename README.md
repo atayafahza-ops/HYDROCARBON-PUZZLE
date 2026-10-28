@@ -6,6 +6,7 @@
 ### The Hydrocarbon Mystery
 
 ![Status](https://img.shields.io/badge/status-MVP_Playable-22c55e?style=for-the-badge)
+[![Demo](https://img.shields.io/badge/demo-live-0ea5e9?style=for-the-badge&logo=githubpages&logoColor=white)](https://atayafahza-ops.github.io/HYDROCARBON-PUZZLE/)
 ![Phaser](https://img.shields.io/badge/Phaser-3.90-8e44ad?style=for-the-badge)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Bahasa](https://img.shields.io/badge/bahasa-Indonesia-ef4444?style=for-the-badge)
@@ -14,7 +15,7 @@
 > **Susun struktur. Baca rumus. Temukan nama.**
 > Game puzzle edukasi kimia bertema pixel art untuk memahami hidrokarbon.
 
-[Mainkan Sekarang](#cara-akses) &nbsp;·&nbsp; [Fitur](#fitur-utama) &nbsp;·&nbsp; [Level](#level--zona) &nbsp;·&nbsp; [Kontrol](#kontrol)
+[**Mainkan Sekarang**](https://atayafahza-ops.github.io/HYDROCARBON-PUZZLE/) &nbsp;·&nbsp; [Fitur](#fitur-utama) &nbsp;·&nbsp; [Level](#level--zona) &nbsp;·&nbsp; [Kontrol](#kontrol)
 
 </div>
 
@@ -147,9 +148,13 @@ npm run build     # hasil build ada di folder dist/
 npm run preview   # pratinjau hasil build di http://localhost:4173
 ```
 
-### Publikasi Online
+### Akses Online
 
-Belum ada demo publik. Untuk mengaksesnya secara online, build proyek lalu unggah isi folder `dist/` ke static hosting seperti **GitHub Pages**, **Vercel**, atau **Netlify**.
+Game sudah dideploy otomatis ke **GitHub Pages**:
+
+**https://atayafahza-ops.github.io/HYDROCARBON-PUZZLE/**
+
+Setiap push ke branch `main` akan menjalankan workflow [Deploy to GitHub Pages](.github/workflows/deploy-pages.yml) untuk membangun ulang dan mempublikasikan versi terbaru.
 
 ### Progres & Data
 
