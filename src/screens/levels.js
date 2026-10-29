@@ -1,73 +1,51 @@
 import { navigate } from '../ui/router.js';
 import { icon, starIcon } from '../ui/icons.js';
 import { pad2, starsHTML } from '../ui/helpers.js';
-import { showToast } from '../ui/toast.js';
 import { ZONES, getLevel, getZone, LEVELS } from '../data/levels.js';
 import {
   getBestStars,
   getContinueLevelId,
+  getLevelCount,
   getMaxStars,
   getTotalStars,
   getTotalXp,
   getZoneMaxStars,
   getZoneStars,
   isLevelComplete,
-  isLevelUnlocked,
 } from '../systems/save.js';
 
-function zoneIsOpen(zone) {
-  if (zone.status !== 'available') return false;
-  return zone.index === 1 || isLevelUnlocked(zone.slotStart);
-}
-
 function zoneButtonMarkup(zone, selected) {
-  const open = zoneIsOpen(zone);
   const stars = getZoneStars(zone.id);
   const maxStars = getZoneMaxStars(zone.id);
-  const isSoon = zone.status === 'soon';
   return `
-    <button type="button" class="zone-tab zone-tab--${zone.accent} ${selected ? 'is-active' : ''} ${!open ? 'is-locked' : ''}" data-zone="${zone.id}" aria-pressed="${selected}">
+    <button type="button" class="zone-tab zone-tab--${zone.accent} ${selected ? 'is-active' : ''}" data-zone="${zone.id}" aria-pressed="${selected}">
       <span class="zone-tab__icon">${icon(zone.icon, 20)}</span>
       <span class="zone-tab__copy">
         <strong>${zone.name}</strong>
-        <span>${isSoon ? 'SEGERA HADIR' : open ? `${maxStars} BINTANG` : 'TERKUNCI'}</span>
+        <span>${getLevelsForZone(zone.id).length} MISI</span>
       </span>
       <span class="zone-tab__side">
-        ${open ? `<span class="zone-tab__count">${stars}/${maxStars}</span>` : `<span class="zone-tab__lock">${icon('lock', 14)}</span>`}
+        <span class="zone-tab__count">${stars}/${maxStars}</span>
       </span>
     </button>
   `;
 }
 
-function emptyLevelNode(zone, slotNumber) {
-  const isSoon = zone.status === 'soon' || slotNumber > 8;
-  return `
-    <div class="level-slot level-slot--locked">
-      <div class="level-node level-node--placeholder" aria-label="Level ${slotNumber} belum tersedia">
-        <span class="level-node__top">LEVEL</span>
-        <span class="level-node__number">${pad2(slotNumber)}</span>
-        <span class="level-node__lock">${icon(isSoon ? 'clock' : 'lock', 17)}</span>
-        <span class="level-node__status">${isSoon ? 'SEGERA' : 'TERKUNCI'}</span>
-      </div>
-      <span class="level-node__title">${isSoon ? 'Belum tersedia' : 'Terkunci'}</span>
-      <span class="level-node__type">${isSoon ? 'PEMBARUAN' : 'ARSIP'}</span>
-    </div>
-  `;
+function getLevelsForZone(zoneId) {
+  return LEVELS.filter((level) => level.zoneId === zoneId);
 }
 
 function levelNodeMarkup(level, index) {
-  const unlocked = isLevelUnlocked(level.id);
   const complete = isLevelComplete(level.id);
   const stars = getBestStars(level.id);
-  const current = unlocked && !complete;
-  const statusLabel = complete ? 'SELESAI' : unlocked ? 'LANJUT' : 'TERKUNCI';
+  const current = !complete && level.id === getContinueLevelId();
+  const statusLabel = complete ? 'SELESAI' : current ? 'LANJUT' : 'BUKA';
   return `
     <div class="level-slot ${current ? 'is-current' : ''}" style="--slot-index:${index}">
-      <button type="button" class="level-node ${complete ? 'is-complete' : ''} ${current ? 'is-current' : ''} ${!unlocked ? 'is-locked' : ''}" data-level-id="${level.id}" ${!unlocked ? 'aria-disabled="true"' : ''}>
-        <span class="level-node__top">LEVEL</span>
+      <button type="button" class="level-node ${complete ? 'is-complete' : ''} ${current ? 'is-current' : ''}" data-level-id="${level.id}">
+        <span class="level-node__top">${level.difficultyLabel.toUpperCase()}</span>
         <span class="level-node__number">${pad2(level.id)}</span>
         <span class="level-node__status">${statusLabel}</span>
-        ${!unlocked ? `<span class="level-node__lock">${icon('lock', 16)}</span>` : ''}
         ${complete ? `<span class="level-node__check">${icon('check', 13)}</span>` : ''}
       </button>
       <span class="level-node__title">${level.title}</span>
@@ -78,23 +56,25 @@ function levelNodeMarkup(level, index) {
 }
 
 export function mountLevels(root, params = {}) {
-  const initialZone = getZone(params.zoneId ?? getZone(getLevel(getContinueLevelId())?.zoneId ?? 'carbon-basics').id);
-  let selectedZoneId = initialZone.id;
+  const continueLevel = getLevel(getContinueLevelId());
+  const requestedZone = params.zoneId ? getZone(params.zoneId) : null;
+  let selectedZoneId = requestedZone?.id ?? getZone(continueLevel?.zoneId ?? 'carbon-basics')?.id ?? ZONES[0].id;
   const abort = new AbortController();
   const { signal } = abort;
+  const levelCount = getLevelCount();
 
   root.innerHTML = `
     <section class="screen levels-screen" aria-label="Pemilihan level">
       <header class="subbar">
         <button type="button" class="icon-btn subbar__back" data-back aria-label="Kembali ke menu">${icon('arrow-left', 20)}<span>Menu</span></button>
         <div class="subbar__title">
-          <span class="eyebrow">${icon('map', 14)} ARCHIVE MAP <span class="slash">//</span> 5 ZONA</span>
+          <span class="eyebrow">${icon('map', 14)} ARCHIVE MAP <span class="slash">//</span> ${ZONES.length} ZONA</span>
           <h1>Level Select <span class="muted-title">— <span data-zone-heading></span></span></h1>
         </div>
         <div class="subbar__stats">
           <span class="top-stat">${starIcon(16)}<strong>${getTotalStars()}</strong><small>/${getMaxStars()}</small></span>
           <span class="top-stat">${icon('spark', 15)}<strong>${getTotalXp()}</strong><small> XP</small></span>
-          <span class="top-stat top-stat--safe">${icon('database', 15)}<span>8 level MVP</span></span>
+          <span class="top-stat top-stat--safe">${icon('database', 15)}<span>${levelCount} level</span></span>
         </div>
       </header>
 
@@ -111,12 +91,12 @@ export function mountLevels(root, params = {}) {
           </nav>
           <div class="zone-panel-note">
             ${icon('info', 15)}
-            <p>Level baru terbuka setelah level sebelumnya selesai. Zona yang terkunci tetap dapat dipratinjau.</p>
+            <p>Semua level sudah terbuka. Pilih misi mana pun untuk berlatih, lalu ulangi untuk memperbaiki bintang.</p>
           </div>
           <div class="map-legend">
             <span><i class="legend-dot legend-dot--current"></i>Lanjut</span>
             <span><i class="legend-dot legend-dot--done"></i>Selesai</span>
-            <span><i class="legend-dot legend-dot--locked"></i>Terkunci</span>
+            <span><i class="legend-dot legend-dot--open"></i>Terbuka</span>
           </div>
         </aside>
 
@@ -124,8 +104,8 @@ export function mountLevels(root, params = {}) {
       </main>
 
       <footer class="screen-footer levels-footer">
-        <span>${icon('bulb', 15)} Pilih level mana pun yang sudah terbuka untuk mengulang latihan.</span>
-        <span class="footer-version">ARSIP 01—08 <span class="slash">//</span> 8 MISI TERSEDIA</span>
+        <span>${icon('bulb', 15)} Butuh petunjuk? Dr. Nova akan membantumu kapan saja.</span>
+        <span class="footer-version">ARSIP 01—${pad2(levelCount)} <span class="slash">//</span> ${levelCount} MISI TERSEDIA</span>
       </footer>
     </section>
   `;
@@ -135,24 +115,15 @@ export function mountLevels(root, params = {}) {
 
   function renderZone() {
     const zone = getZone(selectedZoneId);
-    const open = zoneIsOpen(zone);
-    const zoneLevels = LEVELS.filter((level) => level.zoneId === zone.id);
-    const slotNumbers = Array.from({ length: 5 }, (_, index) => zone.slotStart + index);
+    if (!zone) return;
+    const zoneLevels = getLevelsForZone(zone.id);
     const stars = getZoneStars(zone.id);
     const maxStars = getZoneMaxStars(zone.id);
-    const nextLevel = open
-      ? zoneLevels.find((level) => isLevelUnlocked(level.id) && !isLevelComplete(level.id))
-      : null;
+    const nextLevel = zoneLevels.find((level) => !isLevelComplete(level.id));
     const lastLevel = zoneLevels[zoneLevels.length - 1] ?? null;
     const completedInZone = zoneLevels.filter((level) => isLevelComplete(level.id)).length;
-    const statusText =
-      zone.status === 'soon'
-        ? 'SEGERA HADIR'
-        : open
-          ? completedInZone === zoneLevels.length
-            ? 'ZONA SELESAI'
-            : 'TERBUKA'
-          : 'TERKUNCI';
+    const firstTier = zoneLevels[0]?.difficulty ?? 1;
+    const lastTier = zoneLevels[zoneLevels.length - 1]?.difficulty ?? firstTier;
 
     headingTarget.textContent = zone.name;
 
@@ -160,16 +131,20 @@ export function mountLevels(root, params = {}) {
       <header class="map-head">
         <div class="map-zone-badge map-zone-badge--${zone.accent}">${icon(zone.icon, 27)}</div>
         <div class="map-head__copy">
-          <span class="eyebrow">LAB 0${zone.index} <span class="slash">//</span> ${zone.status === 'soon' ? 'DALAM PEMBANGUNAN' : 'ARSIP AKTIF'}</span>
+          <span class="eyebrow">LAB ${pad2(zone.index)} <span class="slash">//</span> ARSIP AKTIF</span>
           <h2>${zone.name}</h2>
           <p>${zone.description}</p>
         </div>
         <div class="map-head__stats">
           <div class="map-stat-block">
             <span>${starIcon(15)} BINTANG ZONA</span>
-            <strong>${open ? `${stars}<small>/${maxStars}</small>` : '—'}</strong>
+            <strong>${stars}<small>/${maxStars}</small></strong>
           </div>
-          <span class="badge ${open ? 'badge--green' : 'badge--muted'}">${open ? 'TERBUKA' : statusText}</span>
+          <div class="map-stat-block">
+            <span>${icon('flask', 15)} TINGKAT</span>
+            <strong>T${firstTier}<small>—${lastTier}</small></strong>
+          </div>
+          <span class="badge ${completedInZone === zoneLevels.length ? 'badge--green' : 'badge--outline'}">${completedInZone === zoneLevels.length ? 'ZONA SELESAI' : 'TERBUKA'}</span>
         </div>
       </header>
 
@@ -178,52 +153,26 @@ export function mountLevels(root, params = {}) {
         <div class="map-decoration map-decoration--node" aria-hidden="true"></div>
         <div class="map-rail" aria-hidden="true"></div>
         <div class="level-slots">
-          ${slotNumbers
-            .map((slotNumber, index) => {
-              const level = getLevel(slotNumber);
-              if (!level) return emptyLevelNode(zone, slotNumber);
-              return levelNodeMarkup(level, index);
-            })
-            .join('')}
+          ${zoneLevels.map((level, index) => levelNodeMarkup(level, index)).join('')}
         </div>
         <div class="map-rail-label"><span>ENTRY POINT</span><span>ARCHIVE DEPTH</span></div>
       </div>
 
-      ${
-        !open
-          ? `<div class="zone-locked-banner">
-              <span class="zone-locked-banner__icon">${icon(zone.status === 'soon' ? 'clock' : 'lock', 25)}</span>
-              <div>
-                <strong>${zone.status === 'soon' ? 'Zona ini sedang direstorasi.' : 'Arsip zona ini masih terkunci.'}</strong>
-                <p>${zone.status === 'soon' ? 'Level baru pada zona ini akan ditambahkan pada pembaruan berikutnya.' : 'Selesaikan rangkaian level sebelumnya untuk membuka akses laboratorium ini.'}</p>
-              </div>
-            </div>`
-          : ''
-      }
-
       <footer class="map-info">
         <div class="map-info__copy">
-          <span class="eyebrow">${open ? `${zoneLevels.length} MISI TERSEDIA` : 'AKSES TERBATAS'}</span>
-          <h3>${open ? `Arsip ${zone.shortName}` : zone.status === 'soon' ? 'Segera di Carbon Code' : 'Teruskan dari Carbon Basics'}</h3>
+          <span class="eyebrow">${zoneLevels.length} MISI TERSEDIA</span>
+          <h3>Arsip ${zone.shortName}</h3>
           <p>${
-            open
-              ? nextLevel
-                ? `Lanjutkan penelitianmu. Misi berikutnya: <strong>Level ${pad2(nextLevel.id)} — ${nextLevel.title}.</strong>`
-                : 'Semua misi pada zona ini telah dipulihkan. Kamu bisa mengulang level untuk memperbaiki bintang.'
-              : zone.status === 'soon'
-                ? 'Nantinya zona ini memuat tantangan tata nama dan isomer yang lebih kompleks.'
-                : 'Zona ini akan terbuka setelah seluruh arsip Carbon Basics dipulihkan.'
+            nextLevel
+              ? `Lanjutkan penelitianmu. Misi berikutnya: <strong>Level ${pad2(nextLevel.id)} — ${nextLevel.title}.</strong>`
+              : 'Semua misi pada zona ini telah dipulihkan. Kamu bisa mengulang level untuk memperbaiki bintang.'
           }</p>
         </div>
         <div class="map-info__actions">
-          ${
-            open
-              ? `<button type="button" class="btn btn--primary" data-map-continue>
-                  ${icon(nextLevel ? 'play' : 'reset', 17)}
-                  <span>${nextLevel ? `Lanjutkan Level ${pad2(nextLevel.id)}` : `Ulangi Level ${pad2(lastLevel?.id ?? 1)}`}</span>
-                </button>`
-              : `<button type="button" class="btn btn--ghost" disabled>${icon('lock', 16)}<span>Belum terbuka</span></button>`
-          }
+          <button type="button" class="btn btn--primary" data-map-continue>
+            ${icon(nextLevel ? 'play' : 'reset', 17)}
+            <span>${nextLevel ? `Lanjutkan Level ${pad2(nextLevel.id)}` : `Ulangi Level ${pad2(lastLevel?.id ?? 1)}`}</span>
+          </button>
         </div>
       </footer>
     `;
@@ -233,12 +182,7 @@ export function mountLevels(root, params = {}) {
         'click',
         () => {
           const levelId = Number(button.dataset.levelId);
-          const level = getLevel(levelId);
-          if (!level) return;
-          if (!isLevelUnlocked(levelId)) {
-            showToast('Selesaikan level sebelumnya untuk membuka arsip ini.', { type: 'info' });
-            return;
-          }
+          if (!getLevel(levelId)) return;
           navigate('level', { levelId });
         },
         { signal },
@@ -249,9 +193,7 @@ export function mountLevels(root, params = {}) {
       'click',
       () => {
         const targetLevel = nextLevel ?? lastLevel;
-        if (targetLevel && isLevelUnlocked(targetLevel.id)) {
-          navigate('level', { levelId: targetLevel.id });
-        }
+        if (targetLevel) navigate('level', { levelId: targetLevel.id });
       },
       { signal },
     );

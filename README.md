@@ -71,26 +71,28 @@ Struktur yang sama secara kimia tetap diterima meskipun digambar dengan tata let
 
 ## Level & Zona
 
-Saat ini tersedia **8 level** dalam **2 zona** yang dapat dimainkan.
+Saat ini tersedia **50 level** dalam **5 zona**. Semua level langsung terbuka, dan tingkat kesulitan naik setiap 5 level (10 tingkat, Pemula hingga Master).
 
-| Zona | Status | Fokus |
+| Zona | Level | Fokus |
 |---|---|---|
-| **Carbon Basics Lab** | Tersedia | Atom, valensi, rumus, dan alkana dasar |
-| **Bond Research Lab** | Tersedia | Ikatan tunggal, rangkap dua, dan rangkap tiga |
-| **Naming Database** | Segera hadir | Rantai induk, nomor posisi, dan tata nama |
-| **Isomer Chamber** | Segera hadir | Percabangan dan isomer struktur |
-| **Master Chemistry Lab** | Segera hadir | Kombinasi semua mekanik |
+| **Carbon Basics Lab** | 1–10 | Atom, valensi, rumus, dan alkana dasar |
+| **Bond Research Lab** | 11–20 | Ikatan tunggal, rangkap dua, dan rangkap tiga |
+| **Naming Database** | 21–30 | Rantai induk, nomor posisi, dan tata nama |
+| **Isomer Chamber** | 31–40 | Percabangan dan isomer struktur |
+| **Master Chemistry Lab** | 41–50 | Kombinasi semua mekanik |
 
 | # | Level | Tipe | Fokus |
 |---:|---|---|---|
 | 1 | Metana Pertama | Structure Builder | Valensi karbon |
-| 2 | Rantai Karbon | Structure Builder | Rantai alkana |
-| 3 | Detektor Ikatan | Formula Detective | Ikatan rangkap dua |
 | 4 | Struktur Butana | Structure Builder | Rantai utama |
 | 5 | Titik Percabangan | Structure Builder | Percabangan & penomoran |
-| 6 | Formula Detective | Formula Detective | Isomer struktur |
-| 7 | Name Decoder | Name Decoder | Tata nama alkena |
-| 8 | Lab Challenge | Combo | Struktur + tata nama |
+| 7 | Formula Isomer | Formula Detective | Isomer struktur |
+| 11 | Name Decoder | Name Decoder | Tata nama alkena |
+| 20 | Lab Challenge | Combo | Struktur + tata nama |
+| 39 | Isooktana | Structure Builder | Tiga cabang metil |
+| 50 | Master Molekul | Structure Builder | Empat cabang metil |
+
+Peta level lengkap dapat dilihat langsung di layar **Level Select**.
 
 Level baru terbuka setelah level sebelumnya selesai. Tidak ada sistem energi atau batas percobaan.
 
@@ -214,7 +216,7 @@ HYDROCARBON-PUZZLE/
 
 ## Peta Jalan
 
-- **v1.0 (sekarang)** — MVP: 8 level, 3 tipe puzzle, bintang, petunjuk, codex, progres tersimpan.
+- **v1.0 (sekarang)** — 50 level dalam 5 zona, 3 tipe puzzle, bintang, petunjuk, codex, progres tersimpan.
 - **v1.1** — Level alkana bercabang tambahan, variasi puzzle rumus, tutorial interaktif.
 - **v1.2** — Tantangan seluruh isomer, level bonus, statistik pemain.
 - **v2.0** — Struktur kompleks, sikloalkana, tantangan harian, cerita lanjutan.

@@ -181,7 +181,7 @@ export function openCreditsModal() {
         <div><span>Mesin game</span><strong>Phaser 3</strong></div>
         <div><span>Materi</span><strong>Tata nama hidrokarbon SMA</strong></div>
         <div><span>Dokumen acuan</span><strong>GDD Carbon Code v1.0</strong></div>
-        <div><span>Versi MVP</span><strong>1.0.0 • 8 level</strong></div>
+        <div><span>Versi MVP</span><strong>1.0.0 • 50 level</strong></div>
       </div>
       <p class="credits-note">Dibuat untuk pengalaman belajar yang interaktif. Materi dibatasi pada hidrokarbon rantai terbuka dan disederhanakan untuk kebutuhan level.</p>
     `,

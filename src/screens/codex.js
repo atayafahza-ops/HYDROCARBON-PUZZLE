@@ -338,7 +338,7 @@ const PAGES = [
 
       <section class="codex-section">
         <h3>Menghitung isomer C₅H₁₂</h3>
-        <p class="codex-body-copy">Dengan lima karbon, ada tiga isomer struktur alkana: pentana (lurus), 2-metilbutana, dan 2,2-dimetilpropana. Carbon Code memakai 2-metilbutana sebagai contoh cabang pada Level 8.</p>
+        <p class="codex-body-copy">Dengan lima karbon, ada tiga isomer struktur alkana: pentana (lurus), 2-metilbutana, dan 2,2-dimetilpropana. Carbon Code memakai 2-metilbutana sebagai contoh cabang pada Level 20.</p>
         ${miniStructure(METHYLBUTANE, '2-metilbutana', { className: 'codex-structure--compact' })}
       </section>
 

@@ -205,7 +205,7 @@ export function areGraphsIsomorphic(a, b) {
   if (a.nodes.length !== b.nodes.length) return false;
   if (a.edges.length !== b.edges.length) return false;
   if (a.nodes.length === 0) return true;
-  if (a.nodes.length > 7) return false;
+  if (a.nodes.length > 8) return false;
 
   const matrixA = orderMatrix(a);
   const matrixB = orderMatrix(b);

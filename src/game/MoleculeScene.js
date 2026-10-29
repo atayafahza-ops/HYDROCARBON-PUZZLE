@@ -166,9 +166,9 @@ export class MoleculeScene extends Phaser.Scene {
     const graphics = this.add.graphics();
     const label = this.add
       .text(0, 0, 'C', {
-        fontFamily: '"Pixelify Sans", "Trebuchet MS", sans-serif',
-        fontSize: '21px',
-        fontStyle: 'bold',
+        // Press Start 2P keeps the C glyph open; Pixelify Sans bold reads as "O".
+        fontFamily: '"Press Start 2P", "Trebuchet MS", monospace',
+        fontSize: '12px',
         color: PALETTE.label,
       })
       .setOrigin(0.5);

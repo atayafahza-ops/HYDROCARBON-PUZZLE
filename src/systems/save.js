@@ -111,11 +111,8 @@ export function getPreviousLevel(levelId) {
 }
 
 export function isLevelUnlocked(levelId) {
-  const level = getLevel(levelId);
-  if (!level) return false;
-  const previous = getPreviousLevel(level.id);
-  if (!previous) return true;
-  return isLevelComplete(previous.id);
+  // Every level is open from the start; progress only tracks stars.
+  return Boolean(getLevel(levelId));
 }
 
 export function getContinueLevelId() {

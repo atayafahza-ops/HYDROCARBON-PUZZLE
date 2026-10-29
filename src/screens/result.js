@@ -5,7 +5,7 @@ import { formulaHTML } from '../chemistry/formula.js';
 import { analyzeMolecule } from '../chemistry/graph.js';
 import { renderStructureSVG } from '../ui/structure.js';
 import { xpForStars, starCaption } from '../systems/score.js';
-import { getLevel } from '../data/levels.js';
+import { getLevel, getZone } from '../data/levels.js';
 import {
   getBestStars,
   getCompletedCount,
@@ -83,7 +83,7 @@ export function mountResult(root, params = {}) {
           <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
 
           <span class="result-kicker">${icon('check', 14)} MISSION COMPLETE</span>
-          <span class="result-file">${level.file} <span class="slash">//</span> ZONA ${String(level.zoneId === 'bond-research' ? 2 : 1).padStart(2, '0')}</span>
+          <span class="result-file">${level.file} <span class="slash">//</span> ZONA ${pad2(getZone(level.zoneId)?.index ?? 1)}</span>
           <h1>LEVEL<br />SELESAI!</h1>
           <p class="result-level-name">${level.title}<span>${level.focus}</span></p>
 
@@ -116,7 +116,7 @@ export function mountResult(root, params = {}) {
               <button type="button" class="btn btn--ghost" data-action="map">${icon('map', 16)}<span>Peta</span></button>
             </div>
             <span class="result-next-hint">
-              ${nextLevel ? `${icon('unlock', 13)} Level ${pad2(nextLevel.id)} — ${nextLevel.title} kini terbuka.` : allDone ? `${icon('crown', 13)} Seluruh arsip MVP telah kamu pulihkan.` : `${icon('database', 13)} Progres tersimpan otomatis.`}
+              ${nextLevel ? `${icon('arrow-right', 13)} Berikutnya: Level ${pad2(nextLevel.id)} — ${nextLevel.title}.` : allDone ? `${icon('crown', 13)} Seluruh arsip MVP telah kamu pulihkan.` : `${icon('database', 13)} Progres tersimpan otomatis.`}
             </span>
           </div>
         </section>
