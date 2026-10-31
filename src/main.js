@@ -1,8 +1,5 @@
-import '@fontsource/press-start-2p/400.css';
-import '@fontsource/pixelify-sans/400.css';
-import '@fontsource/pixelify-sans/500.css';
-import '@fontsource/pixelify-sans/600.css';
-import '@fontsource/pixelify-sans/700.css';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/space-grotesk';
 import './styles/main.css';
 
 import { initRouter } from './ui/router.js';

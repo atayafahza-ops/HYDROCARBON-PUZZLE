@@ -27,7 +27,9 @@ export function mountMoleculeBuilder(host, hooks = {}) {
       height: initialHeight,
     },
     input: {
+      activePointers: 3,
       mouse: { preventDefaultWheel: true },
+      touch: { capture: true },
     },
   });
 
@@ -37,7 +39,11 @@ export function mountMoleculeBuilder(host, hooks = {}) {
           if (destroyed) return;
           const width = Math.max(240, host.clientWidth);
           const height = Math.max(220, host.clientHeight);
-          if (game.scale && Math.abs(game.scale.width - width) > 2) {
+          if (
+            game.scale &&
+            (Math.abs(game.scale.width - width) > 2 ||
+              Math.abs(game.scale.height - height) > 2)
+          ) {
             game.scale.resize(width, height);
           }
         })
@@ -56,15 +62,26 @@ export function mountMoleculeBuilder(host, hooks = {}) {
     clearHighlights: () => scene.clearValidationMarks(),
     getMolecule: () => scene.getMolecule(),
     getAnalysis: () => scene.getAnalysis(),
+    zoomIn: () => scene.zoomIn(),
+    zoomOut: () => scene.zoomOut(),
+    resetView: () => scene.resetView(),
+    getZoom: () => scene.view?.scale ?? 1,
     isReady: () => scene.ready,
     getGame: () => game,
     destroy: () => {
       if (destroyed) return;
       destroyed = true;
+      if (import.meta.env.DEV && window.__builderDebug?.api === api) {
+        delete window.__builderDebug;
+      }
       resizeObserver?.disconnect();
       game.destroy(true);
     },
   };
+
+  if (import.meta.env.DEV) {
+    window.__builderDebug = { scene, api };
+  }
 
   return api;
 }

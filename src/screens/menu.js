@@ -62,7 +62,7 @@ export function mountMenu(root) {
       <main class="menu-grid">
         <div class="mentor-column">
           <div class="mentor-art panel">
-            <img src="${import.meta.env.BASE_URL}assets/img/dr-nova.png" alt="Dr. Nova di laboratorium Carbon Code" class="mentor-img" />
+            <img src="${import.meta.env.BASE_URL}assets/img/dr-nova-vector.svg" alt="Dr. Nova di laboratorium Carbon Code" class="mentor-img" />
             <div class="mentor-scanlines" aria-hidden="true"></div>
             <div class="mentor-topline">
               <span>${icon('terminal', 14)} LIVE FEED</span>

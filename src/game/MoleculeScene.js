@@ -12,23 +12,30 @@ import {
 import { toSubscript } from '../chemistry/formula.js';
 
 const PALETTE = {
-  grid: 0x23546c,
-  gridMajor: 0x2c718b,
-  gridDot: 0x62d7e4,
-  bondSingle: 0x5ed4e5,
-  bondDouble: 0xf0b34c,
-  bondTriple: 0xef7b86,
-  bondShadow: 0x03111c,
-  atomFill: 0x08273b,
-  atomFillInvalid: 0x2f121a,
-  atomRing: 0x53cfdf,
-  atomRingHover: 0xd9fbff,
-  atomRingSelected: 0xffd35b,
-  atomRingInvalid: 0xff6573,
-  atomGlow: 0x64e5ef,
-  label: '#eefcff',
-  labelInvalid: '#ffc3c9',
+  grid: 0x29405f,
+  gridMajor: 0x33506f,
+  gridDot: 0x22d3ee,
+  bondSingle: 0x22d3ee,
+  bondDouble: 0x10b981,
+  bondTriple: 0xfbbf24,
+  bondShadow: 0x050b16,
+  atomFill: 0x14243c,
+  atomFillInvalid: 0x3b1420,
+  atomRing: 0x22d3ee,
+  atomRingHover: 0xf8fafc,
+  atomRingSelected: 0x10b981,
+  atomRingInvalid: 0xf43f5e,
+  atomGlow: 0x22d3ee,
+  label: '#f8fafc',
+  labelInvalid: '#fecdd3',
 };
+
+const MIN_ZOOM = 0.7;
+const MAX_ZOOM = 2.4;
+const ROOMY_GAP = 80;
+const COMPACT_GAP = 60;
+const ROOMY_MARGIN = 60;
+const COMPACT_MARGIN = 32;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -58,20 +65,28 @@ export class MoleculeScene extends Phaser.Scene {
     this.validationMarks = new Set();
     this.width = 0;
     this.height = 0;
+    this.view = { scale: 1, x: 0, y: 0 };
+    this.pointers = new Map();
+    this.pinch = null;
   }
 
   create() {
-    this.width = Math.max(240, this.scale.width);
-    this.height = Math.max(220, this.scale.height);
+    this.width = Math.max(1, this.scale.width);
+    this.height = Math.max(1, this.scale.height);
+    this.worldLayer = this.add.container(0, 0);
     this.gridLayer = this.add.graphics();
     this.bondLayer = this.add.graphics();
     this.atomLayer = this.add.container(0, 0);
+    this.worldLayer.add([this.gridLayer, this.bondLayer, this.atomLayer]);
+
+    if (this.game?.canvas) this.game.canvas.style.touchAction = 'none';
 
     this.input.mouse?.disableContextMenu?.();
     this.input.on('pointerdown', this.onPointerDown, this);
     this.input.on('pointermove', this.onPointerMove, this);
     this.input.on('pointerup', this.onPointerUp, this);
     this.input.on('pointerupoutside', this.onPointerUp, this);
+    this.input.on('wheel', this.onWheel, this);
     this.input.on('gameout', () => {
       if (this.hoverId !== null) {
         this.hoverId = null;
@@ -84,6 +99,7 @@ export class MoleculeScene extends Phaser.Scene {
     this.drawGrid();
     this.syncAtomVisuals();
     this.drawBonds();
+    this.applyView();
     this.ready = true;
     this.emitUpdate();
     this.hooks.onReady?.();
@@ -92,28 +108,39 @@ export class MoleculeScene extends Phaser.Scene {
   onShutdown() {
     this.input?.removeAllListeners();
     this.scale?.off('resize', this.onResize, this);
+    this.pointers?.clear();
+    this.pinch = null;
     this.game?.canvas?.style && (this.game.canvas.style.cursor = 'default');
   }
 
   onResize(gameSize) {
-    this.width = Math.max(240, gameSize.width);
-    this.height = Math.max(220, gameSize.height);
-    const margin = 58;
-    for (const node of this.molecule.nodes) {
-      node.x = clamp(node.x, margin, this.width - margin);
-      node.y = clamp(node.y, margin, this.height - margin);
-    }
+    this.width = Math.max(1, gameSize.width);
+    this.height = Math.max(1, gameSize.height);
+    this.clampAtomsToCanvas();
     this.drawGrid();
     this.syncAtomVisuals();
     this.drawBonds();
+    this.applyView();
+  }
+
+  clampAtomsToCanvas() {
+    const margin = this.snapMargin();
+    for (const node of this.molecule.nodes) {
+      node.x = clamp(node.x, margin, Math.max(margin, this.width - margin));
+      node.y = clamp(node.y, margin, Math.max(margin, this.height - margin));
+    }
   }
 
   drawGrid() {
     const graphics = this.gridLayer;
     if (!graphics) return;
     graphics.clear();
+
     const cell = 40;
-    graphics.lineStyle(1, PALETTE.grid, 0.22);
+    graphics.fillStyle(0x0b1526, 0.35);
+    graphics.fillRect(0, 0, this.width, this.height);
+
+    graphics.lineStyle(1, PALETTE.grid, 0.34);
     for (let x = cell; x < this.width; x += cell) {
       graphics.lineBetween(x, 0, x, this.height);
     }
@@ -121,7 +148,7 @@ export class MoleculeScene extends Phaser.Scene {
       graphics.lineBetween(0, y, this.width, y);
     }
 
-    graphics.lineStyle(1, PALETTE.gridMajor, 0.16);
+    graphics.lineStyle(1, PALETTE.gridMajor, 0.5);
     for (let x = cell * 4; x < this.width; x += cell * 4) {
       graphics.lineBetween(x, 0, x, this.height);
     }
@@ -129,34 +156,67 @@ export class MoleculeScene extends Phaser.Scene {
       graphics.lineBetween(0, y, this.width, y);
     }
 
-    graphics.fillStyle(PALETTE.gridDot, 0.2);
-    for (let x = cell * 2; x < this.width; x += cell * 2) {
-      for (let y = cell * 2; y < this.height; y += cell * 2) {
-        graphics.fillCircle(x, y, 1.1);
+    graphics.fillStyle(PALETTE.gridDot, 0.4);
+    for (let x = cell * 4; x < this.width; x += cell * 4) {
+      for (let y = cell * 4; y < this.height; y += cell * 4) {
+        graphics.fillCircle(x, y, 1.6);
       }
     }
+  }
 
-    const inset = 12;
-    const corner = 22;
-    graphics.lineStyle(2, PALETTE.gridMajor, 0.65);
-    graphics.lineBetween(inset, inset, inset + corner, inset);
-    graphics.lineBetween(inset, inset, inset, inset + corner);
-    graphics.lineBetween(this.width - inset, inset, this.width - inset - corner, inset);
-    graphics.lineBetween(this.width - inset, inset, this.width - inset, inset + corner);
-    graphics.lineBetween(inset, this.height - inset, inset + corner, this.height - inset);
-    graphics.lineBetween(inset, this.height - inset, inset, this.height - inset - corner);
-    graphics.lineBetween(
-      this.width - inset,
-      this.height - inset,
-      this.width - inset - corner,
-      this.height - inset,
-    );
-    graphics.lineBetween(
-      this.width - inset,
-      this.height - inset,
-      this.width - inset,
-      this.height - inset - corner,
-    );
+  screenToWorld(x, y) {
+    const scale = this.view.scale || 1;
+    return { x: (x - this.view.x) / scale, y: (y - this.view.y) / scale };
+  }
+
+  applyView() {
+    const scale = this.view.scale;
+    if (scale <= 1.0001) {
+      this.view.x = (this.width * (1 - scale)) / 2;
+      this.view.y = (this.height * (1 - scale)) / 2;
+    } else {
+      this.view.x = clamp(this.view.x, this.width * (1 - scale), 0);
+      this.view.y = clamp(this.view.y, this.height * (1 - scale), 0);
+    }
+    this.worldLayer?.setPosition(this.view.x, this.view.y);
+    this.worldLayer?.setScale(scale);
+    this.hooks.onZoom?.(Math.round(scale * 100));
+  }
+
+  zoomAt(nextScale, anchorX = this.width / 2, anchorY = this.height / 2) {
+    const scale = clamp(nextScale, MIN_ZOOM, MAX_ZOOM);
+    if (Math.abs(scale - this.view.scale) < 0.001) {
+      this.applyView();
+      return;
+    }
+    const world = {
+      x: (anchorX - this.view.x) / this.view.scale,
+      y: (anchorY - this.view.y) / this.view.scale,
+    };
+    this.view.scale = scale;
+    this.view.x = anchorX - world.x * scale;
+    this.view.y = anchorY - world.y * scale;
+    this.applyView();
+  }
+
+  zoomIn() {
+    this.zoomAt(this.view.scale * 1.25);
+  }
+
+  zoomOut() {
+    this.zoomAt(this.view.scale / 1.25);
+  }
+
+  resetView() {
+    this.view = { scale: 1, x: 0, y: 0 };
+    this.applyView();
+  }
+
+  onWheel(pointer, over, deltaX, deltaY) {
+    if (this.locked) return;
+    const delta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
+    if (!delta) return;
+    this.zoomAt(this.view.scale * (delta > 0 ? 0.88 : 1.14), pointer.x, pointer.y);
   }
 
   ensureVisual(node) {
@@ -164,12 +224,14 @@ export class MoleculeScene extends Phaser.Scene {
     if (visual) return visual;
     const container = this.add.container(node.x, node.y);
     const graphics = this.add.graphics();
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
     const label = this.add
       .text(0, 0, 'C', {
-        // Press Start 2P keeps the C glyph open; Pixelify Sans bold reads as "O".
-        fontFamily: '"Press Start 2P", "Trebuchet MS", monospace',
-        fontSize: '12px',
+        fontFamily: '"Inter Variable", "Inter", system-ui, sans-serif',
+        fontSize: '14px',
+        fontStyle: '600',
         color: PALETTE.label,
+        resolution: Math.min(3, Math.max(2, dpr)),
       })
       .setOrigin(0.5);
     container.add([graphics, label]);
@@ -216,15 +278,15 @@ export class MoleculeScene extends Phaser.Scene {
       const graphics = visual.graphics;
       graphics.clear();
       if (selected) {
-        graphics.fillStyle(PALETTE.atomRingSelected, 0.09);
-        graphics.fillCircle(0, 0, 42);
+        graphics.fillStyle(PALETTE.atomRingSelected, 0.1);
+        graphics.fillCircle(0, 0, 40);
       } else if (hovered) {
-        graphics.fillStyle(PALETTE.atomGlow, 0.06);
+        graphics.fillStyle(0xf8fafc, 0.06);
         graphics.fillCircle(0, 0, 37);
       }
 
-      graphics.fillStyle(0x01080e, 0.4);
-      graphics.fillCircle(2, 4, 32);
+      graphics.fillStyle(0x020817, 0.34);
+      graphics.fillCircle(0, 3, 30);
 
       const ringColor = invalid
         ? PALETTE.atomRingInvalid
@@ -234,30 +296,14 @@ export class MoleculeScene extends Phaser.Scene {
             ? PALETTE.atomRingHover
             : PALETTE.atomRing;
 
-      graphics.fillStyle(invalid ? PALETTE.atomFillInvalid : PALETTE.atomFill, 0.98);
+      graphics.fillStyle(invalid ? PALETTE.atomFillInvalid : PALETTE.atomFill, 1);
       graphics.fillCircle(0, 0, 30);
-      graphics.lineStyle(selected || invalid ? 3 : 2.2, ringColor, 1);
-      graphics.strokeCircle(0, 0, 30);
-      graphics.lineStyle(1, 0x8ceaf3, selected || invalid ? 0.35 : 0.18);
-      graphics.strokeCircle(0, 0, 24);
-
-      if (selected) {
-        graphics.lineStyle(2, PALETTE.atomRingSelected, 0.9);
-        for (const angle of [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]) {
-          const inner = 36;
-          const outer = 42;
-          const x1 = Math.cos(angle) * inner;
-          const y1 = Math.sin(angle) * inner;
-          const x2 = Math.cos(angle) * outer;
-          const y2 = Math.sin(angle) * outer;
-          graphics.lineBetween(x1, y1, x2, y2);
-        }
-      }
+      graphics.lineStyle(selected || invalid ? 2.6 : 2, ringColor, 1);
+      graphics.strokeCircle(0, 0, 29);
 
       if (invalid) {
-        graphics.lineStyle(2, PALETTE.atomRingInvalid, 0.9);
-        graphics.lineBetween(-26, -36, -18, -36);
-        graphics.lineBetween(-22, -40, -22, -32);
+        graphics.fillStyle(PALETTE.atomRingInvalid, 1);
+        graphics.fillCircle(22, -22, 5);
       }
     }
 
@@ -318,10 +364,11 @@ export class MoleculeScene extends Phaser.Scene {
   }
 
   findAtomAt(x, y) {
+    const world = this.screenToWorld(x, y);
     let nearest = null;
     let nearestDistance = 34;
     for (const node of this.molecule.nodes) {
-      const distance = Math.hypot(node.x - x, node.y - y);
+      const distance = Math.hypot(node.x - world.x, node.y - world.y);
       if (distance <= nearestDistance) {
         nearest = node.id;
         nearestDistance = distance;
@@ -335,7 +382,14 @@ export class MoleculeScene extends Phaser.Scene {
   }
 
   onPointerDown(pointer) {
+    this.pointers.set(pointer.id, { x: pointer.x, y: pointer.y });
     if (this.locked) return;
+
+    if (this.pointers.size >= 2) {
+      this.beginPinch();
+      return;
+    }
+
     const rightClick = pointer.rightButtonDown?.() || pointer.event?.button === 2;
     const atomId = this.findAtomAt(pointer.x, pointer.y);
 
@@ -350,19 +404,57 @@ export class MoleculeScene extends Phaser.Scene {
         startX: pointer.x,
         startY: pointer.y,
         moved: false,
-        original: { ...findAtom(this.molecule, atomId) },
         snapshot: this.captureState(),
       };
       this.setCursor('grab');
     } else {
-      this.dragState = { atomId: null, startX: pointer.x, startY: pointer.y, moved: false };
+      this.dragState = {
+        atomId: null,
+        startX: pointer.x,
+        startY: pointer.y,
+        moved: false,
+        viewStart: { x: this.view.x, y: this.view.y },
+      };
     }
+  }
+
+  beginPinch() {
+    const [a, b] = [...this.pointers.values()];
+    if (!a || !b) return;
+    this.dragState = null;
+    this.hoverId = null;
+    this.pinch = {
+      distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+      scale: this.view.scale,
+      mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+    };
+    this.setCursor('grabbing');
   }
 
   onPointerMove(pointer) {
     if (!this.ready) return;
+    if (this.pointers.has(pointer.id)) {
+      this.pointers.set(pointer.id, { x: pointer.x, y: pointer.y });
+    }
+
+    if (this.pinch && this.pointers.size >= 2) {
+      const [a, b] = [...this.pointers.values()];
+      const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const target = clamp(this.pinch.scale * (distance / this.pinch.distance), MIN_ZOOM, MAX_ZOOM);
+      this.view.x += mid.x - this.pinch.mid.x;
+      this.view.y += mid.y - this.pinch.mid.y;
+      this.pinch.mid = mid;
+      this.zoomAt(target, mid.x, mid.y);
+      return;
+    }
+
     if (this.dragState && pointer.isDown) {
-      const distance = Math.hypot(pointer.x - this.dragState.startX, pointer.y - this.dragState.startY);
+      const dx = pointer.x - this.dragState.startX;
+      const dy = pointer.y - this.dragState.startY;
+      const distance = Math.hypot(dx, dy);
+      const world = this.screenToWorld(pointer.x, pointer.y);
+
       if (this.dragState.atomId !== null) {
         if (!this.dragState.moved && distance > 5) {
           this.dragState.moved = true;
@@ -376,14 +468,20 @@ export class MoleculeScene extends Phaser.Scene {
         if (this.dragState.moved) {
           const node = findAtom(this.molecule, this.dragState.atomId);
           if (node) {
-            const margin = 48;
-            node.x = clamp(pointer.x, margin, this.width - margin);
-            node.y = clamp(pointer.y, margin, this.height - margin);
+            const separated = this.separatePosition(node.id, world.x, world.y);
+            node.x = separated.x;
+            node.y = separated.y;
             const visual = this.atomVisuals.get(node.id);
             visual?.container.setPosition(node.x, node.y);
             this.drawBonds();
           }
         }
+      } else if (this.view.scale > 1.001 && (this.dragState.moved || distance > 4)) {
+        this.dragState.moved = true;
+        this.view.x = this.dragState.viewStart.x + dx;
+        this.view.y = this.dragState.viewStart.y + dy;
+        this.applyView();
+        this.setCursor('grabbing');
       }
       return;
     }
@@ -397,34 +495,30 @@ export class MoleculeScene extends Phaser.Scene {
     }
   }
 
-  onPointerUp() {
+  onPointerUp(pointer) {
     if (!this.ready) return;
+    if (pointer) this.pointers.delete(pointer.id);
+    if (this.pointers.size < 2) this.pinch = null;
+    if (this.pinch) return;
+
     const drag = this.dragState;
     this.dragState = null;
-    this.setCursor(this.locked ? 'default' : 'default');
+    this.setCursor('default');
 
     if (!drag) return;
+    if (drag.moved && drag.atomId === null) return;
 
     if (drag.moved && drag.atomId !== null) {
       const node = findAtom(this.molecule, drag.atomId);
       if (!node) return;
-      const snap = 20;
-      const margin = 48;
-      const snappedX = clamp(Math.round(node.x / snap) * snap, margin, this.width - margin);
-      const snappedY = clamp(Math.round(node.y / snap) * snap, margin, this.height - margin);
-      const collision = this.molecule.nodes.some(
-        (other) =>
-          other.id !== node.id &&
-          Math.hypot(other.x - snappedX, other.y - snappedY) < 58,
-      );
-      if (collision) {
-        node.x = drag.original.x;
-        node.y = drag.original.y;
-        this.history.pop();
-        this.hooks.onToast?.('Atom terlalu dekat dengan atom lain. Posisi dikembalikan.');
+      const snapped = this.findFreeSnap(node.id, node.x, node.y);
+      if (snapped) {
+        node.x = snapped.x;
+        node.y = snapped.y;
       } else {
-        node.x = snappedX;
-        node.y = snappedY;
+        const separated = this.separatePosition(node.id, node.x, node.y);
+        node.x = separated.x;
+        node.y = separated.y;
       }
       this.syncAtomVisuals();
       this.drawBonds();
@@ -518,56 +612,130 @@ export class MoleculeScene extends Phaser.Scene {
     return true;
   }
 
-  findFreePosition() {
-    const margin = 62;
-    const minDistance = 72;
-    const selected = this.selectedId !== null ? findAtom(this.molecule, this.selectedId) : null;
-    const base = selected
-      ? { x: selected.x, y: selected.y }
-      : { x: this.width / 2, y: this.height / 2 };
-    const offsets = [
-      [118, 0],
-      [92, 82],
-      [0, 112],
-      [-92, 82],
-      [-118, 0],
-      [-92, -82],
-      [0, -112],
-      [92, -82],
-      [214, 0],
-      [0, 194],
-      [-214, 0],
-      [0, -194],
-    ];
+  minGap() {
+    return Math.min(this.width, this.height) >= 300 ? ROOMY_GAP : COMPACT_GAP;
+  }
 
-    const isValid = (x, y) =>
+  snapMargin() {
+    return Math.min(this.width, this.height) >= 300 ? ROOMY_MARGIN : COMPACT_MARGIN;
+  }
+
+
+  findFreePosition() {
+    const margin = this.snapMargin();
+    const gap = this.minGap();
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+
+    if (!this.molecule.nodes.length) {
+      return {
+        x: clamp(cx, margin, Math.max(margin, this.width - margin)),
+        y: clamp(cy, margin, Math.max(margin, this.height - margin)),
+      };
+    }
+
+    const selected = this.selectedId !== null ? findAtom(this.molecule, this.selectedId) : null;
+    const base = selected ?? { x: cx, y: cy };
+    const isFree = (x, y) =>
       x >= margin &&
       x <= this.width - margin &&
       y >= margin &&
       y <= this.height - margin &&
-      this.molecule.nodes.every((node) => Math.hypot(node.x - x, node.y - y) >= minDistance);
+      this.molecule.nodes.every((node) => Math.hypot(node.x - x, node.y - y) >= gap);
 
-    for (const [dx, dy] of offsets) {
-      const x = Math.round((base.x + dx) / 20) * 20;
-      const y = Math.round((base.y + dy) / 20) * 20;
-      if (isValid(x, y)) return { x, y };
-    }
-
-    for (let radius = 70; radius < Math.max(this.width, this.height); radius += 60) {
-      for (let step = 0; step < 16; step += 1) {
-        const angle = (Math.PI * 2 * step) / 16;
-        const x = Math.round((base.x + Math.cos(angle) * radius) / 20) * 20;
-        const y = Math.round((base.y + Math.sin(angle) * radius) / 20) * 20;
-        if (isValid(x, y)) return { x, y };
+    // Centred lattice slots keep every atom reachable even on short phone canvases.
+    const cols = Math.floor(Math.max(0, this.width - margin * 2) / gap);
+    const rows = Math.floor(Math.max(0, this.height - margin * 2) / gap);
+    let best = null;
+    let bestDistance = Infinity;
+    for (let col = -cols; col <= cols; col += 1) {
+      for (let row = -rows; row <= rows; row += 1) {
+        const x = cx + col * gap;
+        const y = cy + row * gap;
+        if (!isFree(x, y)) continue;
+        const distance = Math.hypot(x - base.x, y - base.y);
+        if (distance < bestDistance) {
+          best = { x, y };
+          bestDistance = distance;
+        }
       }
     }
+    if (best) return best;
 
-    for (let y = margin; y <= this.height - margin; y += 70) {
-      for (let x = margin; x <= this.width - margin; x += 70) {
-        if (isValid(x, y)) return { x, y };
+    // Dense fallback so adding never silently stalls if slots are exhausted.
+    const minX = Math.ceil(margin / 20) * 20;
+    const minY = Math.ceil(margin / 20) * 20;
+    const maxX = Math.floor((this.width - margin) / 20) * 20;
+    const maxY = Math.floor((this.height - margin) / 20) * 20;
+    for (let relaxed = gap - 10; relaxed >= 40; relaxed -= 10) {
+      for (let y = minY; y <= maxY; y += 20) {
+        for (let x = minX; x <= maxX; x += 20) {
+          if (this.molecule.nodes.every((node) => Math.hypot(node.x - x, node.y - y) >= relaxed)) {
+            return { x, y };
+          }
+        }
       }
     }
+    return null;
+  }
 
+  separatePosition(atomId, x, y) {
+    const margin = this.snapMargin();
+    const gap = this.minGap();
+    let nx = x;
+    let ny = y;
+    for (let pass = 0; pass < 3; pass += 1) {
+      for (const other of this.molecule.nodes) {
+        if (other.id === atomId) continue;
+        let dx = nx - other.x;
+        let dy = ny - other.y;
+        let distance = Math.hypot(dx, dy);
+        if (distance >= gap) continue;
+        if (distance < 0.001) {
+          dx = 0;
+          dy = 1;
+          distance = 1;
+        }
+        nx = other.x + (dx / distance) * gap;
+        ny = other.y + (dy / distance) * gap;
+      }
+      nx = clamp(nx, margin, Math.max(margin, this.width - margin));
+      ny = clamp(ny, margin, Math.max(margin, this.height - margin));
+    }
+    return { x: nx, y: ny };
+  }
+
+  findFreeSnap(atomId, x, y) {
+    const margin = this.snapMargin();
+    const gap = this.minGap();
+    const snap = 20;
+    const isFree = (cx, cy) =>
+      cx >= margin &&
+      cx <= this.width - margin &&
+      cy >= margin &&
+      cy <= this.height - margin &&
+      this.molecule.nodes.every(
+        (other) => other.id === atomId || Math.hypot(other.x - cx, other.y - cy) >= gap,
+      );
+    const baseX = Math.round(x / snap) * snap;
+    const baseY = Math.round(y / snap) * snap;
+    const candidates = [
+      [baseX, baseY],
+      [baseX + snap, baseY],
+      [baseX - snap, baseY],
+      [baseX, baseY + snap],
+      [baseX, baseY - snap],
+      [baseX + snap, baseY + snap],
+      [baseX - snap, baseY + snap],
+      [baseX + snap, baseY - snap],
+      [baseX - snap, baseY - snap],
+    ].sort(
+      (a, b) =>
+        Math.hypot(a[0] - x, a[1] - y) - Math.hypot(b[0] - x, b[1] - y),
+    );
+    for (const [cx, cy] of candidates) {
+      if (isFree(cx, cy)) return { x: cx, y: cy };
+    }
     return null;
   }
 

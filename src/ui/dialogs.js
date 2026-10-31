@@ -9,7 +9,7 @@ import {
 } from '../systems/save.js';
 import { applySettings, toggleSetting } from '../systems/settings.js';
 
-const NOVA_PORTRAIT = `${import.meta.env.BASE_URL}assets/img/dr-nova.png`;
+const NOVA_PORTRAIT = `${import.meta.env.BASE_URL}assets/img/dr-nova-vector.svg`;
 
 function settingToggle(key, enabled, label) {
   return `<button type="button" class="switch ${enabled ? 'is-on' : ''}" role="switch" aria-checked="${enabled}" aria-label="${label}" data-setting="${key}"><span class="switch__thumb"></span><span class="switch__label">${enabled ? 'ON' : 'OFF'}</span></button>`;

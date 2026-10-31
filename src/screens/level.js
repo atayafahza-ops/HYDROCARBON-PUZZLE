@@ -1,7 +1,7 @@
 import { navigate } from '../ui/router.js';
 import { icon } from '../ui/icons.js';
 import { escapeHTML, starsHTML } from '../ui/helpers.js';
-import { formulaHTML } from '../chemistry/formula.js';
+import { formulaHTML, formulaUnicode } from '../chemistry/formula.js';
 import { analyzeMolecule, cloneMolecule } from '../chemistry/graph.js';
 import { describeStructure, formatNameTokens } from '../chemistry/nomenclature.js';
 import { validateBuild, validateName } from '../chemistry/validator.js';
@@ -9,7 +9,7 @@ import { renderStructureSVG } from '../ui/structure.js';
 import { mountMoleculeBuilder } from '../game/builder.js';
 import { getLevel, getNextLevel } from '../data/levels.js';
 import { calculateStars } from '../systems/score.js';
-import { getSave, recordCompletion } from '../systems/save.js';
+import { getSave, getTotalXp, recordCompletion } from '../systems/save.js';
 import { sfx } from '../systems/audio.js';
 import { showToast } from '../ui/toast.js';
 import { isModalOpen } from '../ui/modal.js';
@@ -108,6 +108,30 @@ function statusMarkup(status) {
       <span>${status.label}</span>
       <strong>${status.title}</strong>
       <small>${status.detail}</small>
+    </div>
+  `;
+}
+
+function sheetMarkup(run) {
+  const readoutLabel = run.phase === 'name' ? 'Token' : 'Inspector';
+  return `
+    <div class="sheet-head">
+      <button type="button" class="sheet-toggle" data-action="sheet-toggle" aria-expanded="${run.sheetOpen}" aria-controls="game-mobile-sheet">
+        <span class="sheet-grip" aria-hidden="true"></span>
+        <span class="sheet-toggle__label">${run.phase === 'name' ? `${icon('database', 17)} Token & nama` : `${icon('atom', 17)} Inspector molekul`}</span>
+        <span class="sheet-toggle__chevron">${icon('chevron-left', 16)}</span>
+      </button>
+      <div class="sheet-tabs" role="tablist" aria-label="Panel misi">
+        <button type="button" role="tab" class="sheet-tab ${run.sheetTab === 'mission' ? 'is-active' : ''}" data-action="sheet-tab" data-sheet-tab="mission" aria-selected="${run.sheetTab === 'mission'}">
+          ${icon('terminal', 15)} Misi
+        </button>
+        <button type="button" role="tab" class="sheet-tab ${run.sheetTab === 'readout' ? 'is-active' : ''}" data-action="sheet-tab" data-sheet-tab="readout" aria-selected="${run.sheetTab === 'readout'}">
+          ${icon(run.phase === 'name' ? 'database' : 'target', 15)} ${readoutLabel}
+        </button>
+        <button type="button" role="tab" class="sheet-tab ${run.sheetTab === 'hints' ? 'is-active' : ''}" data-action="sheet-tab" data-sheet-tab="hints" aria-selected="${run.sheetTab === 'hints'}">
+          ${icon('bulb', 15)} Petunjuk
+        </button>
+      </div>
     </div>
   `;
 }
@@ -300,12 +324,48 @@ function phaseStepper(run, level) {
   `;
 }
 
-function briefingMarkup(run, level) {
+function briefingBodyMarkup(run, level) {
   const guide = run.phase === 'name' ? level.nameGuide ?? level.guide : level.guide;
   const mentorQuote =
     run.phase === 'name'
       ? 'Teliti membaca struktur. Rantai induk, posisi, lalu akhiran — jangan dibalik.'
       : 'Pilih atom, lalu atom lain untuk membuat ikatan. Inspector akan menjaga valensimu.';
+  return `
+    ${targetMarkup(level)}
+
+    <div class="mission-brief">
+      <span class="section-label"><span>INSTRUKSI</span></span>
+      <p>${level.mission}</p>
+    </div>
+
+    ${phaseStepper(run, level)}
+
+    <details class="briefing-more" open>
+      <summary class="section-label">
+        <span>${run.phase === 'name' ? 'PANDUAN PENAMAAN' : 'PROTOKOL'}</span>
+        <small>${guide.length} LANGKAH</small>
+        ${icon('chevron-right', 14)}
+      </summary>
+      <div class="briefing-more__body">
+        <ol class="guide-list">
+          ${guide.map((step) => `<li><span class="guide-list__no"></span><p>${step}</p></li>`).join('')}
+        </ol>
+
+        <div class="briefing-mentor">
+          <div class="briefing-mentor__portrait">
+            <img src="${import.meta.env.BASE_URL}assets/img/dr-nova-vector.svg" alt="Dr. Nova" loading="lazy" />
+          </div>
+          <div>
+            <span>DR. NOVA <b>//</b> MENTOR</span>
+            <p>“${mentorQuote}”</p>
+          </div>
+        </div>
+      </div>
+    </details>
+  `;
+}
+
+function briefingMarkup(run, level) {
   return `
     <aside class="briefing panel" aria-label="Instruksi misi">
       <div class="panel-head panel-head--compact briefing-head">
@@ -314,33 +374,45 @@ function briefingMarkup(run, level) {
           <span class="panel-code">${level.file}</span>
         </div>
       </div>
-
-      ${targetMarkup(level)}
-
-      <div class="mission-brief">
-        <span class="section-label"><span>INSTRUKSI</span></span>
-        <p>${level.mission}</p>
-      </div>
-
-      ${phaseStepper(run, level)}
-
-      <div class="briefing-guide">
-        <span class="section-label"><span>${run.phase === 'name' ? 'PANDUAN PENAMAAN' : 'PROTOKOL'}</span><small>${guide.length} LANGKAH</small></span>
-        <ol class="guide-list">
-          ${guide.map((step) => `<li><span class="guide-list__no"></span><p>${step}</p></li>`).join('')}
-        </ol>
-      </div>
-
-      <div class="briefing-mentor">
-        <div class="briefing-mentor__portrait">
-          <img src="${import.meta.env.BASE_URL}assets/img/dr-nova.png" alt="Dr. Nova" loading="lazy" />
-        </div>
-        <div>
-          <span>DR. NOVA <b>//</b> MENTOR</span>
-          <p>“${mentorQuote}”</p>
-        </div>
-      </div>
+      ${briefingBodyMarkup(run, level)}
     </aside>
+  `;
+}
+
+function missionSheetMarkup(run, level) {
+  return `
+    <section class="mission-sheet panel" data-sheet-panel="mission" aria-label="Mission file">
+      <div class="mission-sheet__head">
+        <div>
+          <span class="eyebrow">${icon('terminal', 13)} MISSION FILE</span>
+          <strong>${level.file}</strong>
+        </div>
+        <span class="mission-sheet__tag">${run.phase === 'name' ? 'TAHAP 2/2' : 'ARSIP AKTIF'}</span>
+      </div>
+      ${briefingBodyMarkup(run, level)}
+    </section>
+  `;
+}
+
+function missionTargetText(level) {
+  const target = level.target;
+  if (target.kind === 'formula') {
+    return target.formula ? formulaUnicode(target.formula.carbon, target.formula.hydrogen) : 'Rumus target';
+  }
+  if (target.kind === 'structure') return 'Identifikasi struktur';
+  return target.name ?? 'Target senyawa';
+}
+
+function missionStripMarkup(run, level) {
+  return `
+    <button type="button" class="mission-strip" data-action="sheet-tab" data-sheet-tab="mission" aria-label="Buka arsip misi ${escapeHTML(level.title)}">
+      <span class="mission-strip__icon">${icon('terminal', 18)}</span>
+      <span class="mission-strip__copy">
+        <span class="mission-strip__meta">MISI ${String(level.id).padStart(2, '0')} · ${escapeHTML(level.file)}</span>
+        <strong>${escapeHTML(missionTargetText(level))}</strong>
+      </span>
+      <span class="mission-strip__cta">Baca misi ${icon('chevron-right', 15)}</span>
+    </button>
   `;
 }
 
@@ -363,7 +435,14 @@ function buildWorkspaceMarkup(run) {
         <span class="builder-corner builder-corner--tr" aria-hidden="true"></span>
         <span class="builder-corner builder-corner--bl" aria-hidden="true"></span>
         <span class="builder-corner builder-corner--br" aria-hidden="true"></span>
-        <div class="grid-hint">${icon('plus', 13)}<span>KLIK ATOM → ATOM LAIN UNTUK BERIKATAN</span></div>
+        <div class="grid-tools" role="group" aria-label="Kontrol tampilan grid">
+          <button type="button" class="grid-tool" data-grid-zoom="out" aria-label="Perkecil grid">${icon('minus', 16)}</button>
+          <button type="button" class="grid-tool grid-tool--reset" data-grid-zoom="reset" aria-label="Paskan tampilan grid" title="Paskan tampilan">
+            <span data-zoom-label>100%</span>
+          </button>
+          <button type="button" class="grid-tool" data-grid-zoom="in" aria-label="Perbesar grid">${icon('plus', 16)}</button>
+        </div>
+        <div class="grid-hint">${icon('plus', 13)}<span>KETUK ATOM → ATOM LAIN · CUBIT / SCROLL UNTUK ZOOM</span></div>
         <div class="stage-axis" aria-hidden="true"><span>X</span><span>Y</span></div>
         <div class="stage-success ${run.buildValidated ? 'is-visible' : ''}" data-stage-success>
           <span class="stage-success__icon">${icon('check', 30)}</span>
@@ -433,11 +512,13 @@ function nameWorkspaceMarkup(run, level) {
 function buildSideMarkup(run, level) {
   const analysis = analyzeMolecule(EMPTY_MOLECULE);
   return `
-    <aside class="side-stack" aria-label="Inspector dan feedback">
-      <section class="inspector panel" data-inspector>
+    <aside class="side-stack ${run.sheetOpen ? 'is-open' : ''}" data-sheet-tab="${run.sheetTab}" id="game-mobile-sheet" aria-label="Inspector dan feedback">
+      ${sheetMarkup(run)}
+      ${missionSheetMarkup(run, level)}
+      <section class="inspector panel" data-inspector data-sheet-panel="readout">
         ${inspectorMarkup(analysis)}
       </section>
-      <section class="intel-panel panel" data-intel aria-live="polite">
+      <section class="intel-panel panel" data-intel data-sheet-panel="hints" aria-live="polite">
         ${intelMarkup(run, level)}
       </section>
     </aside>
@@ -448,8 +529,10 @@ function nameSideMarkup(run, level) {
   const molecule = run.structureMolecule ?? level.namePuzzle.displayGraph;
   const analysis = analyzeMolecule(molecule);
   return `
-    <aside class="side-stack side-stack--name" aria-label="Bank token dan feedback">
-      <section class="token-console panel">
+    <aside class="side-stack side-stack--name ${run.sheetOpen ? 'is-open' : ''}" data-sheet-tab="${run.sheetTab}" id="game-mobile-sheet" aria-label="Bank token dan feedback">
+      ${sheetMarkup(run)}
+      ${missionSheetMarkup(run, level)}
+      <section class="token-console panel" data-sheet-panel="readout">
         <div class="panel-head panel-head--compact token-console__head">
           <div>
             <span class="eyebrow">${icon('database', 13)} NAME COMPONENTS</span>
@@ -465,12 +548,25 @@ function nameSideMarkup(run, level) {
           <span><small>IKATAN</small><strong>${analysis.bondCounts.single}/${analysis.bondCounts.double}/${analysis.bondCounts.triple}</strong></span>
         </div>
 
+        <div class="name-inline">
+          <div class="name-assembly__head">
+            <span class="eyebrow">${icon('target', 13)} SUSUN NAMA</span>
+            <span class="name-assembly__hint">Ketuk slot untuk membatalkan</span>
+          </div>
+          <div class="name-slots name-slots--inline" data-name-slots-inline>
+            ${slotMarkup(run, level)}
+          </div>
+          <div class="name-preview name-preview--inline" data-name-preview-inline aria-live="polite">
+            ${namePreviewMarkup(run)}
+          </div>
+        </div>
+
         <div class="token-scroll" data-token-bank>
           ${bankMarkup(run, level)}
         </div>
         <div class="token-note">${icon('info', 14)} Satu token hanya dapat dipakai sekali.</div>
       </section>
-      <section class="intel-panel panel" data-intel aria-live="polite">
+      <section class="intel-panel panel" data-intel data-sheet-panel="hints" aria-live="polite">
         ${intelMarkup(run, level)}
       </section>
     </aside>
@@ -600,6 +696,7 @@ function screenMarkup(run, level) {
           </div>
         </div>
         <div class="game-topbar__right">
+          <span class="hud-xp" data-hud-xp title="Total XP">${icon('spark', 14)}<strong>${getTotalXp()}</strong><small>XP</small></span>
           <div class="star-forecast" data-star-forecast title="Potensi bintang misi">
             ${starForecastMarkup(run)}
           </div>
@@ -610,12 +707,15 @@ function screenMarkup(run, level) {
 
       <main class="game-layout">
         ${briefingMarkup(run, level)}
+        ${missionStripMarkup(run, level)}
         ${isName ? nameWorkspaceMarkup(run, level) : buildWorkspaceMarkup(run)}
         ${isName ? nameSideMarkup(run, level) : buildSideMarkup(run, level)}
         <footer class="action-bar" aria-label="Action bar">
           ${actionBarMarkup(run, level)}
         </footer>
       </main>
+
+      <button type="button" class="sheet-backdrop ${run.sheetOpen ? 'is-open' : ''}" data-action="sheet-close" tabindex="-1" aria-hidden="true"></button>
 
       <footer class="game-footer">
         <span class="game-keys">
@@ -654,15 +754,46 @@ export function mountLevel(root, params = {}) {
     structureMolecule: initialMolecule,
     slots: Array(slotCount).fill(null),
     nameHistory: [],
+    sheetOpen: false,
+    sheetTab: 'readout',
   };
 
   let builder = null;
   let disposed = false;
   const abort = new AbortController();
   const { signal } = abort;
+  const mobileQuery = window.matchMedia?.('(max-width: 980px)');
+
+  const isMobile = () => Boolean(mobileQuery?.matches);
 
   function renderScreen() {
     root.innerHTML = screenMarkup(run, level);
+    if (isMobile()) {
+      const more = root.querySelector('.briefing-more');
+      if (more) more.open = false;
+    }
+  }
+
+  function setSheet(open, tab) {
+    run.sheetOpen = typeof open === 'boolean' ? open : !run.sheetOpen;
+    if (tab) run.sheetTab = tab;
+    const stack = root.querySelector('.side-stack');
+    const backdrop = root.querySelector('.sheet-backdrop');
+    backdrop?.classList.toggle('is-open', run.sheetOpen);
+    if (!stack) return;
+    stack.classList.toggle('is-open', run.sheetOpen);
+    stack.dataset.sheetTab = run.sheetTab;
+    const toggle = stack.querySelector('[data-action="sheet-toggle"]');
+    if (toggle) toggle.setAttribute('aria-expanded', String(run.sheetOpen));
+    stack.querySelectorAll('[data-sheet-tab]').forEach((button) => {
+      const active = button.dataset.sheetTab === run.sheetTab;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+  }
+
+  function revealSheet(tab) {
+    if (isMobile()) setSheet(true, tab);
   }
 
   function renderIntel() {
@@ -748,12 +879,16 @@ export function mountLevel(root, params = {}) {
   }
 
   function refreshNameConsole() {
-    const slotsTarget = root.querySelector('[data-name-slots]');
+    const slotsTargets = root.querySelectorAll('[data-name-slots], [data-name-slots-inline]');
     const bankTarget = root.querySelector('[data-token-bank]');
-    const previewTarget = root.querySelector('[data-name-preview]');
-    if (slotsTarget) slotsTarget.innerHTML = slotMarkup(run, level);
+    const previewTargets = root.querySelectorAll('[data-name-preview], [data-name-preview-inline]');
+    slotsTargets.forEach((target) => {
+      target.innerHTML = slotMarkup(run, level);
+    });
     if (bankTarget) bankTarget.innerHTML = bankMarkup(run, level);
-    if (previewTarget) previewTarget.innerHTML = namePreviewMarkup(run);
+    previewTargets.forEach((target) => {
+      target.innerHTML = namePreviewMarkup(run);
+    });
     const paper = root.querySelector('.paper');
     if (paper && run.nameValidated) paper.classList.add('is-valid');
   }
@@ -806,6 +941,10 @@ export function mountLevel(root, params = {}) {
     updateStarForecast();
     updateActionBar();
     sfx.play('success');
+    const xpTarget = root.querySelector('[data-hud-xp] strong');
+    if (xpTarget && Number.isFinite(summary?.totalXp)) {
+      xpTarget.textContent = String(summary.totalXp);
+    }
   }
 
   function buildOutcome(molecule) {
@@ -834,6 +973,7 @@ export function mountLevel(root, params = {}) {
       renderIntel();
       updateInspector(builder?.getAnalysis() ?? analyzeMolecule(EMPTY_MOLECULE));
       triggerWorkspaceError();
+      revealSheet('hints');
       sfx.play(feedback.step === 'empty' ? 'click' : 'error');
       return;
     }
@@ -868,6 +1008,8 @@ export function mountLevel(root, params = {}) {
     run.canUndo = false;
     run.slots = Array(slotCount).fill(null);
     run.nameHistory = [];
+    run.sheetOpen = false;
+    run.sheetTab = 'readout';
     renderScreen();
     sfx.play('unlock');
     showToast('Struktur valid. Lanjut ke tahap penamaan.', { type: 'success' });
@@ -972,6 +1114,7 @@ export function mountLevel(root, params = {}) {
     renderIntel();
     updateStarForecast();
     updateActionBar();
+    revealSheet('hints');
   }
 
   function runNameCheck() {
@@ -983,6 +1126,7 @@ export function mountLevel(root, params = {}) {
       run.feedback = feedback;
       renderIntel();
       updateStarForecast();
+      revealSheet('hints');
       if (feedback.step === 'incomplete') {
         sfx.play('click');
         showToast(feedback.message, { type: 'info' });
@@ -1050,6 +1194,15 @@ export function mountLevel(root, params = {}) {
       case 'view-result':
         if (run.resultReady) navigate('result', run.resultReady);
         break;
+      case 'sheet-toggle':
+        setSheet();
+        break;
+      case 'sheet-close':
+        setSheet(false);
+        break;
+      case 'sheet-tab':
+        setSheet(true, target?.dataset?.sheetTab ?? run.sheetTab);
+        break;
       default:
         break;
     }
@@ -1073,6 +1226,14 @@ export function mountLevel(root, params = {}) {
       const bondButton = event.target.closest('[data-bond-order]');
       if (bondButton && !bondButton.disabled) {
         handleAction('bond', bondButton);
+        return;
+      }
+      const zoomButton = event.target.closest('[data-grid-zoom]');
+      if (zoomButton) {
+        const mode = zoomButton.dataset.gridZoom;
+        if (mode === 'in') builder?.zoomIn();
+        else if (mode === 'out') builder?.zoomOut();
+        else builder?.resetView();
         return;
       }
       const actionTarget = event.target.closest('[data-action]');
@@ -1159,6 +1320,11 @@ export function mountLevel(root, params = {}) {
           if (root.querySelector('[data-inspector]')) {
             updateInspector(builder?.getAnalysis() ?? analyzeMolecule(EMPTY_MOLECULE));
           }
+        },
+        onZoom(percent) {
+          if (disposed) return;
+          const label = root.querySelector('[data-zoom-label]');
+          if (label) label.textContent = `${percent}%`;
         },
       });
       builder.setBondOrder(run.activeBond);
