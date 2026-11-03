@@ -2625,7 +2625,7 @@ kbd {
 }
 
 .result-note p,
-.nova-quote p {
+.luci-quote p {
   font-size: 12.5px;
   line-height: 1.6;
 }
@@ -2770,7 +2770,7 @@ kbd {
     align-items: flex-start;
   }
 
-  /* Stacked menu: keep Dr. Nova's whole face above the nameplate */
+  /* Stacked menu: keep Dr. Luci's whole face above the nameplate */
 
   .mentor-img {
     object-fit: contain;

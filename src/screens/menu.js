@@ -62,7 +62,7 @@ export function mountMenu(root) {
       <main class="menu-grid">
         <div class="mentor-column">
           <div class="mentor-art panel">
-            <img src="${import.meta.env.BASE_URL}assets/img/dr-nova-vector.svg" alt="Dr. Nova di laboratorium Carbon Code" class="mentor-img" />
+            <img src="${import.meta.env.BASE_URL}assets/img/dr-luci-vector.svg" alt="Dr. Luci di laboratorium Carbon Code" class="mentor-img" />
             <div class="mentor-scanlines" aria-hidden="true"></div>
             <div class="mentor-topline">
               <span>${icon('terminal', 14)} LIVE FEED</span>
@@ -70,13 +70,13 @@ export function mountMenu(root) {
             </div>
             <div class="mentor-id-chip">
               <span class="mentor-id-chip__dot"></span>
-              <div><strong>DR. NOVA</strong><span>MENTOR // KIMIA ORGANIK</span></div>
+              <div><strong>DR. LUCI</strong><span>MENTOR // KIMIA ORGANIK</span></div>
             </div>
             <div class="mentor-corner-note">${icon('atom', 16)} <span>VALENCE 4</span></div>
           </div>
           <div class="dialog-card panel">
             <div class="dialog-head">
-              <span class="dialog-speaker">Dr. Nova</span>
+              <span class="dialog-speaker">Dr. Luci</span>
               <span class="dialog-role">MENTOR</span>
               <span class="dialog-status">${icon('sound', 13)} AUDIO LOG</span>
             </div>

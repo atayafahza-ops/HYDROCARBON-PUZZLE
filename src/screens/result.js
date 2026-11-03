@@ -177,15 +177,15 @@ export function mountResult(root, params = {}) {
           <section class="result-explanation panel">
             <header class="panel-head panel-head--compact">
               <div>
-                <span class="eyebrow">${icon('terminal', 13)} ANALYSIS // DR. NOVA</span>
+                <span class="eyebrow">${icon('terminal', 13)} ANALYSIS // DR. LUCI</span>
                 <h2 class="panel-title">PENJELASAN</h2>
               </div>
               <span class="explanation-code">RPT-${pad2(level.id)}</span>
             </header>
             <div class="result-explanation__body">
-              <div class="nova-quote">
-                <img src="${import.meta.env.BASE_URL}assets/img/dr-nova-vector.svg" alt="" aria-hidden="true" loading="lazy" />
-                <span class="nova-quote__tag">DR. NOVA <b>//</b> MENTOR</span>
+              <div class="luci-quote">
+                <img src="${import.meta.env.BASE_URL}assets/img/dr-luci-vector.svg" alt="" aria-hidden="true" loading="lazy" />
+                <span class="luci-quote__tag">DR. LUCI <b>//</b> MENTOR</span>
               </div>
               <div class="result-explanation__copy">
                 <p>${escapeHTML(params.explanation ?? level.result?.explanation ?? '')}</p>

@@ -640,7 +640,7 @@
   margin-top: 9px;
 }
 
-.nova-quote {
+.luci-quote {
   position: relative;
   flex: 0 0 74px;
   min-height: 96px;
@@ -649,7 +649,7 @@
   overflow: hidden;
 }
 
-.nova-quote::after {
+.luci-quote::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -657,7 +657,7 @@
   pointer-events: none;
 }
 
-.nova-quote img {
+.luci-quote img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -666,7 +666,7 @@
   object-position: center 12%;
 }
 
-.nova-quote__tag {
+.luci-quote__tag {
   position: absolute;
   z-index: 2;
   left: 5px;
@@ -677,7 +677,7 @@
   letter-spacing: 0.07em;
 }
 
-.nova-quote__tag b {
+.luci-quote__tag b {
   color: var(--text-faint);
   font-weight: 400;
 }

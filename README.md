@@ -25,15 +25,15 @@
 
 **Carbon Code: The Hydrocarbon Mystery** adalah game puzzle 2D bergaya pixel art yang mengajak pemain menyusun struktur molekul, memahami rumus kimia, dan menentukan nama hidrokarbon. Berbeda dari kuis biasa, pemain berinteraksi langsung dengan atom dan ikatan di atas papan molekul.
 
-Pemain berperan sebagai asisten laboratorium digital yang bertugas memulihkan arsip molekul rusak di Laboratorium Carbon Code, dibimbing oleh mentor digital **Dr. Nova**. Setiap teka-teki yang selesai akan memulihkan arsip dan membuka area laboratorium berikutnya.
+Pemain berperan sebagai asisten laboratorium digital yang bertugas memulihkan arsip molekul rusak di Laboratorium Carbon Code, dibimbing oleh mentor digital **Dr. Luci**. Setiap teka-teki yang selesai akan memulihkan arsip dan membuka area laboratorium berikutnya.
 
 <div align="center">
 <img src="public/assets/img/lab-bg.png" alt="Laboratorium Carbon Code" width="49%" />
-<img src="public/assets/img/dr-nova.png" alt="Dr. Nova, mentor digital pemain" width="49%" />
+<img src="public/assets/img/dr-luci.png" alt="Dr. Luci, mentor digital pemain" width="49%" />
 </div>
 
 > "Selamat datang di Laboratorium Carbon Code! Setiap puzzle membantu kamu memahami hubungan antara struktur, rumus, dan nama senyawa. Tidak ada batas percobaan di sini — eksperimen, periksa, dan pelajari kesalahannya."
-> — **Dr. Nova**
+> — **Dr. Luci**
 
 **Materi utama:** tata nama dan rumus hidrokarbon (alkana, alkena, alkuna, senyawa bercabang) untuk pelajar SMA.
 

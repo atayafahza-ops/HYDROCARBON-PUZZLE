@@ -9,7 +9,7 @@ import {
 } from '../systems/save.js';
 import { applySettings, toggleSetting } from '../systems/settings.js';
 
-const NOVA_PORTRAIT = `${import.meta.env.BASE_URL}assets/img/dr-nova-vector.svg`;
+const LUCI_PORTRAIT = `${import.meta.env.BASE_URL}assets/img/dr-luci-vector.svg`;
 
 function settingToggle(key, enabled, label) {
   return `<button type="button" class="switch ${enabled ? 'is-on' : ''}" role="switch" aria-checked="${enabled}" aria-label="${label}" data-setting="${key}"><span class="switch__thumb"></span><span class="switch__label">${enabled ? 'ON' : 'OFF'}</span></button>`;
@@ -177,7 +177,7 @@ export function openCreditsModal() {
       </div>
       <div class="credits-grid">
         <div><span>Desain & program</span><strong>Carbon Code Lab</strong></div>
-        <div><span>Karakter mentor</span><strong>Dr. Nova</strong></div>
+        <div><span>Karakter mentor</span><strong>Dr. Luci</strong></div>
         <div><span>Mesin game</span><strong>Phaser 3</strong></div>
         <div><span>Materi</span><strong>Tata nama hidrokarbon SMA</strong></div>
         <div><span>Dokumen acuan</span><strong>GDD Carbon Code v1.0</strong></div>
@@ -261,13 +261,13 @@ export function openPauseModal({ onRestart, onExit }) {
 
 export function openIntroModal({ onClose } = {}) {
   return openModal({
-    eyebrow: 'BRIEFING // DR. NOVA',
+    eyebrow: 'BRIEFING // DR. LUCI',
     title: 'Selamat datang di Carbon Code',
     body: `
       <div class="mentor-dialog">
         <div class="mentor-dialog__portrait">
-          <img src="${NOVA_PORTRAIT}" alt="Dr. Nova, mentor laboratorium Carbon Code" />
-          <div class="mentor-dialog__id"><span>DR. NOVA</span><strong>MENTOR LAB</strong></div>
+          <img src="${LUCI_PORTRAIT}" alt="Dr. Luci, mentor laboratorium Carbon Code" />
+          <div class="mentor-dialog__id"><span>DR. LUCI</span><strong>MENTOR LAB</strong></div>
         </div>
         <div class="mentor-dialog__copy">
           <p class="mentor-dialog__quote">“Arsip molekul kita rusak. Aku butuh asisten yang teliti untuk menyusun ulang strukturnya.”</p>

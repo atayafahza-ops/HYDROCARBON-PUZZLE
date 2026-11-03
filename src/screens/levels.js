@@ -104,7 +104,7 @@ export function mountLevels(root, params = {}) {
       </main>
 
       <footer class="screen-footer levels-footer">
-        <span>${icon('bulb', 15)} Butuh petunjuk? Dr. Nova akan membantumu kapan saja.</span>
+        <span>${icon('bulb', 15)} Butuh petunjuk? Dr. Luci akan membantumu kapan saja.</span>
         <span class="footer-version">ARSIP 01—${pad2(levelCount)} <span class="slash">//</span> ${levelCount} MISI TERSEDIA</span>
       </footer>
     </section>
