@@ -9,7 +9,7 @@ import {
 } from '../systems/save.js';
 import { applySettings, toggleSetting } from '../systems/settings.js';
 
-const LUCI_PORTRAIT = `${import.meta.env.BASE_URL}assets/img/dr-luci-vector.svg`;
+const LUCI_PORTRAIT = `${import.meta.env.BASE_URL}assets/img/dr-luci.png`;
 
 function settingToggle(key, enabled, label) {
   return `<button type="button" class="switch ${enabled ? 'is-on' : ''}" role="switch" aria-checked="${enabled}" aria-label="${label}" data-setting="${key}"><span class="switch__thumb"></span><span class="switch__label">${enabled ? 'ON' : 'OFF'}</span></button>`;

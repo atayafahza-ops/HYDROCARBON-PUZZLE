@@ -2770,11 +2770,11 @@ kbd {
     align-items: flex-start;
   }
 
-  /* Stacked menu: keep Dr. Luci's whole face above the nameplate */
+  /* Stacked menu: keep Dr. Luci's face clear of the nameplate */
 
   .mentor-img {
-    object-fit: contain;
-    object-position: center bottom;
+    object-fit: cover;
+    object-position: center 45%;
   }
 
   .game-screen {

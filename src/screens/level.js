@@ -353,7 +353,7 @@ function briefingBodyMarkup(run, level) {
 
         <div class="briefing-mentor">
           <div class="briefing-mentor__portrait">
-            <img src="${import.meta.env.BASE_URL}assets/img/dr-luci-vector.svg" alt="Dr. Luci" loading="lazy" />
+            <img src="${import.meta.env.BASE_URL}assets/img/dr-luci.png" alt="Dr. Luci" loading="lazy" />
           </div>
           <div>
             <span>DR. LUCI <b>//</b> MENTOR</span>

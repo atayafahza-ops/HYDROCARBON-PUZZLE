@@ -184,7 +184,7 @@ export function mountResult(root, params = {}) {
             </header>
             <div class="result-explanation__body">
               <div class="luci-quote">
-                <img src="${import.meta.env.BASE_URL}assets/img/dr-luci-vector.svg" alt="" aria-hidden="true" loading="lazy" />
+                <img src="${import.meta.env.BASE_URL}assets/img/dr-luci.png" alt="" aria-hidden="true" loading="lazy" />
                 <span class="luci-quote__tag">DR. LUCI <b>//</b> MENTOR</span>
               </div>
               <div class="result-explanation__copy">
