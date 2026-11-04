@@ -275,11 +275,26 @@ kbd {
   display: none;
 }
 
-.mentor-img {
+.mentor-art__backdrop {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 25%;
+  transform: scale(1.12);
+  filter: blur(26px) saturate(1.15) brightness(0.6);
+}
+
+/* The artwork is square but the panel is not, so cover would shave the hair
+   off against the edges. Frame it instead and let the blur fill the rest. */
+.mentor-img {
+  width: auto;
+  height: 84%;
+  margin: auto;
+  border-radius: 20px;
+  object-fit: contain;
+  object-position: center;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
 }
 
 .mentor-topline {
@@ -2712,6 +2727,27 @@ kbd {
   border-radius: 14px;
 }
 
+.mentor-dialog__portrait .mentor-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.12);
+  filter: blur(22px) saturate(1.15) brightness(0.6);
+}
+
+.mentor-dialog__portrait .mentor-dialog__art {
+  position: absolute;
+  inset: 0;
+  width: 88%;
+  height: auto;
+  margin: auto;
+  border-radius: 14px;
+  object-fit: contain;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
 .mentor-dialog__quote {
   font-size: 15px;
   line-height: 1.55;
@@ -2770,11 +2806,10 @@ kbd {
     align-items: flex-start;
   }
 
-  /* Stacked menu: keep Dr. Luci's face clear of the nameplate */
+  /* Stacked menu: the panel is short, so the framed portrait shrinks with it */
 
   .mentor-img {
-    object-fit: cover;
-    object-position: center 45%;
+    height: 88%;
   }
 
   .game-screen {

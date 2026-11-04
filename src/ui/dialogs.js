@@ -266,7 +266,8 @@ export function openIntroModal({ onClose } = {}) {
     body: `
       <div class="mentor-dialog">
         <div class="mentor-dialog__portrait">
-          <img src="${LUCI_PORTRAIT}" alt="Dr. Luci, mentor laboratorium Carbon Code" />
+          <img src="${LUCI_PORTRAIT}" alt="" aria-hidden="true" class="mentor-dialog__backdrop" />
+          <img src="${LUCI_PORTRAIT}" alt="Dr. Luci, mentor laboratorium Carbon Code" class="mentor-dialog__art" />
           <div class="mentor-dialog__id"><span>DR. LUCI</span><strong>MENTOR LAB</strong></div>
         </div>
         <div class="mentor-dialog__copy">

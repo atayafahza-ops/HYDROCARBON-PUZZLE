@@ -62,6 +62,7 @@ export function mountMenu(root) {
       <main class="menu-grid">
         <div class="mentor-column">
           <div class="mentor-art panel">
+            <img src="${import.meta.env.BASE_URL}assets/img/dr-luci.png" alt="" aria-hidden="true" class="mentor-art__backdrop" />
             <img src="${import.meta.env.BASE_URL}assets/img/dr-luci.png" alt="Dr. Luci di laboratorium Carbon Code" class="mentor-img" />
             <div class="mentor-scanlines" aria-hidden="true"></div>
             <div class="mentor-topline">
