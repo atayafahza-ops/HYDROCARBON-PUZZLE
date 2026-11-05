@@ -12,19 +12,22 @@ import {
   getZoneMaxStars,
   getZoneStars,
   isLevelComplete,
+  isLevelUnlocked,
 } from '../systems/save.js';
 
 function zoneButtonMarkup(zone, selected) {
   const stars = getZoneStars(zone.id);
   const maxStars = getZoneMaxStars(zone.id);
+  const locked = getLevelsForZone(zone.id).every((level) => !isLevelUnlocked(level.id));
   return `
-    <button type="button" class="zone-tab zone-tab--${zone.accent} ${selected ? 'is-active' : ''}" data-zone="${zone.id}" aria-pressed="${selected}">
-      <span class="zone-tab__icon">${icon(zone.icon, 20)}</span>
+    <button type="button" class="zone-tab zone-tab--${zone.accent} ${selected ? 'is-active' : ''} ${locked ? 'is-locked' : ''}" data-zone="${zone.id}" aria-pressed="${selected}">
+      <span class="zone-tab__icon">${locked ? icon('lock', 18) : icon(zone.icon, 20)}</span>
       <span class="zone-tab__copy">
         <strong>${zone.name}</strong>
         <span>${getLevelsForZone(zone.id).length} MISI</span>
       </span>
       <span class="zone-tab__side">
+        ${locked ? `<span class="zone-tab__lock">${icon('lock', 13)}</span>` : ''}
         <span class="zone-tab__count">${stars}/${maxStars}</span>
       </span>
     </button>
@@ -37,16 +40,18 @@ function getLevelsForZone(zoneId) {
 
 function levelNodeMarkup(level, index) {
   const complete = isLevelComplete(level.id);
+  const unlocked = isLevelUnlocked(level.id);
   const stars = getBestStars(level.id);
-  const current = !complete && level.id === getContinueLevelId();
-  const statusLabel = complete ? 'SELESAI' : current ? 'LANJUT' : 'BUKA';
+  const current = unlocked && !complete && level.id === getContinueLevelId();
+  const statusLabel = complete ? 'SELESAI' : current ? 'LANJUT' : unlocked ? 'BUKA' : 'TERKUNCI';
   return `
-    <div class="level-slot ${current ? 'is-current' : ''}" style="--slot-index:${index}">
-      <button type="button" class="level-node ${complete ? 'is-complete' : ''} ${current ? 'is-current' : ''}" data-level-id="${level.id}">
+    <div class="level-slot ${current ? 'is-current' : ''} ${unlocked ? '' : 'level-slot--locked'}" style="--slot-index:${index}">
+      <button type="button" class="level-node ${complete ? 'is-complete' : ''} ${current ? 'is-current' : ''} ${unlocked ? '' : 'is-locked'}" data-level-id="${level.id}" ${unlocked ? '' : 'disabled'}>
         <span class="level-node__top">${level.difficultyLabel.toUpperCase()}</span>
         <span class="level-node__number">${pad2(level.id)}</span>
         <span class="level-node__status">${statusLabel}</span>
         ${complete ? `<span class="level-node__check">${icon('check', 13)}</span>` : ''}
+        ${unlocked ? '' : `<span class="level-node__lock">${icon('lock', 12)}</span>`}
       </button>
       <span class="level-node__title">${level.title}</span>
       <span class="level-node__type">${level.typeLabel}</span>
@@ -91,12 +96,13 @@ export function mountLevels(root, params = {}) {
           </nav>
           <div class="zone-panel-note">
             ${icon('info', 15)}
-            <p>Semua level sudah terbuka. Pilih misi mana pun untuk berlatih, lalu ulangi untuk memperbaiki bintang.</p>
+            <p>Level terbuka berurutan. Selesaikan misi sebelumnya untuk membuka misi berikutnya, lalu ulangi level lama untuk memperbaiki bintang.</p>
           </div>
           <div class="map-legend">
             <span><i class="legend-dot legend-dot--current"></i>Lanjut</span>
             <span><i class="legend-dot legend-dot--done"></i>Selesai</span>
             <span><i class="legend-dot legend-dot--open"></i>Terbuka</span>
+            <span><i class="legend-dot legend-dot--locked"></i>Terkunci</span>
           </div>
         </aside>
 
@@ -119,19 +125,23 @@ export function mountLevels(root, params = {}) {
     const zoneLevels = getLevelsForZone(zone.id);
     const stars = getZoneStars(zone.id);
     const maxStars = getZoneMaxStars(zone.id);
-    const nextLevel = zoneLevels.find((level) => !isLevelComplete(level.id));
+    const zoneLocked = zoneLevels.every((level) => !isLevelUnlocked(level.id));
+    const nextLevel = zoneLevels.find(
+      (level) => isLevelUnlocked(level.id) && !isLevelComplete(level.id),
+    );
     const lastLevel = zoneLevels[zoneLevels.length - 1] ?? null;
     const completedInZone = zoneLevels.filter((level) => isLevelComplete(level.id)).length;
     const firstTier = zoneLevels[0]?.difficulty ?? 1;
     const lastTier = zoneLevels[zoneLevels.length - 1]?.difficulty ?? firstTier;
+    const gateLevel = zoneLevels[0]?.id ? getLevel(zoneLevels[0].id - 1) : null;
 
     headingTarget.textContent = zone.name;
 
     mapPanel.innerHTML = `
       <header class="map-head">
-        <div class="map-zone-badge map-zone-badge--${zone.accent}">${icon(zone.icon, 27)}</div>
+        <div class="map-zone-badge map-zone-badge--${zone.accent}">${icon(zoneLocked ? 'lock' : zone.icon, 27)}</div>
         <div class="map-head__copy">
-          <span class="eyebrow">LAB ${pad2(zone.index)} <span class="slash">//</span> ARSIP AKTIF</span>
+          <span class="eyebrow">LAB ${pad2(zone.index)} <span class="slash">//</span> ${zoneLocked ? 'ARSIP TERSEGEL' : 'ARSIP AKTIF'}</span>
           <h2>${zone.name}</h2>
           <p>${zone.description}</p>
         </div>
@@ -144,9 +154,25 @@ export function mountLevels(root, params = {}) {
             <span>${icon('flask', 15)} TINGKAT</span>
             <strong>T${firstTier}<small>—${lastTier}</small></strong>
           </div>
-          <span class="badge ${completedInZone === zoneLevels.length ? 'badge--green' : 'badge--outline'}">${completedInZone === zoneLevels.length ? 'ZONA SELESAI' : 'TERBUKA'}</span>
+          <span class="badge ${completedInZone === zoneLevels.length ? 'badge--green' : 'badge--outline'}">${
+            zoneLocked ? 'TERKUNCI' : completedInZone === zoneLevels.length ? 'ZONA SELESAI' : 'TERBUKA'
+          }</span>
         </div>
       </header>
+
+      ${
+        zoneLocked
+          ? `
+      <div class="zone-locked-banner">
+        <span class="zone-locked-banner__icon">${icon('lock', 18)}</span>
+        <div>
+          <strong>Arsip belum dapat dibuka</strong>
+          <p>Selesaikan ${gateLevel ? `Level ${pad2(gateLevel.id)} — ${gateLevel.title}` : 'misi sebelumnya'} untuk membukanya.</p>
+        </div>
+      </div>
+      `
+          : ''
+      }
 
       <div class="level-map" aria-label="Peta level ${zone.name}">
         <div class="map-decoration map-decoration--grid" aria-hidden="true"></div>
@@ -160,18 +186,26 @@ export function mountLevels(root, params = {}) {
 
       <footer class="map-info">
         <div class="map-info__copy">
-          <span class="eyebrow">${zoneLevels.length} MISI TERSEDIA</span>
+          <span class="eyebrow">${zoneLevels.length} MISI ${zoneLocked ? 'TERSEGEL' : 'TERSEDIA'}</span>
           <h3>Arsip ${zone.shortName}</h3>
           <p>${
-            nextLevel
-              ? `Lanjutkan penelitianmu. Misi berikutnya: <strong>Level ${pad2(nextLevel.id)} — ${nextLevel.title}.</strong>`
-              : 'Semua misi pada zona ini telah dipulihkan. Kamu bisa mengulang level untuk memperbaiki bintang.'
+            zoneLocked
+              ? 'Zona ini akan terbuka otomatis begitu kamu menuntaskan misi terakhir sebelumnya.'
+              : nextLevel
+                ? `Lanjutkan penelitianmu. Misi berikutnya: <strong>Level ${pad2(nextLevel.id)} — ${nextLevel.title}.</strong>`
+                : 'Semua misi pada zona ini telah dipulihkan. Kamu bisa mengulang level untuk memperbaiki bintang.'
           }</p>
         </div>
         <div class="map-info__actions">
-          <button type="button" class="btn btn--primary" data-map-continue>
-            ${icon(nextLevel ? 'play' : 'reset', 17)}
-            <span>${nextLevel ? `Lanjutkan Level ${pad2(nextLevel.id)}` : `Ulangi Level ${pad2(lastLevel?.id ?? 1)}`}</span>
+          <button type="button" class="btn btn--primary" data-map-continue ${zoneLocked ? 'disabled' : ''}>
+            ${icon(zoneLocked ? 'lock' : nextLevel ? 'play' : 'reset', 17)}
+            <span>${
+              zoneLocked
+                ? 'Zona Terkunci'
+                : nextLevel
+                  ? `Lanjutkan Level ${pad2(nextLevel.id)}`
+                  : `Ulangi Level ${pad2(lastLevel?.id ?? 1)}`
+            }</span>
           </button>
         </div>
       </footer>
@@ -182,7 +216,7 @@ export function mountLevels(root, params = {}) {
         'click',
         () => {
           const levelId = Number(button.dataset.levelId);
-          if (!getLevel(levelId)) return;
+          if (!isLevelUnlocked(levelId)) return;
           navigate('level', { levelId });
         },
         { signal },
@@ -192,23 +226,31 @@ export function mountLevels(root, params = {}) {
     mapPanel.querySelector('[data-map-continue]')?.addEventListener(
       'click',
       () => {
+        if (zoneLocked) return;
         const targetLevel = nextLevel ?? lastLevel;
-        if (targetLevel) navigate('level', { levelId: targetLevel.id });
+        if (targetLevel && isLevelUnlocked(targetLevel.id)) navigate('level', { levelId: targetLevel.id });
       },
       { signal },
     );
+  }
+
+  function selectZoneTab(zoneId) {
+    selectedZoneId = zoneId;
+    root.querySelectorAll('[data-zone]').forEach((zoneButton) => {
+      const active = zoneButton.dataset.zone === selectedZoneId;
+      zoneButton.classList.toggle('is-active', active);
+      zoneButton.setAttribute('aria-pressed', String(active));
+    });
+    // Ten zones no longer fit the panel: the active tab can sit outside a scroller in
+    // either axis, so keep it in view without shifting the rest of the page.
+    root.querySelector('.zone-tab.is-active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
 
   root.querySelectorAll('[data-zone]').forEach((button) => {
     button.addEventListener(
       'click',
       () => {
-        selectedZoneId = button.dataset.zone;
-        root.querySelectorAll('[data-zone]').forEach((zoneButton) => {
-          const active = zoneButton.dataset.zone === selectedZoneId;
-          zoneButton.classList.toggle('is-active', active);
-          zoneButton.setAttribute('aria-pressed', String(active));
-        });
+        selectZoneTab(button.dataset.zone);
         renderZone();
         mapPanel.classList.remove('map-panel--enter');
         void mapPanel.offsetWidth;
@@ -220,6 +262,7 @@ export function mountLevels(root, params = {}) {
 
   root.querySelector('[data-back]')?.addEventListener('click', () => navigate('menu'), { signal });
   renderZone();
+  root.querySelector('.zone-tab.is-active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
 
   window.addEventListener(
     'keydown',
@@ -233,12 +276,7 @@ export function mountLevels(root, params = {}) {
       const delta = event.key === 'ArrowRight' ? 1 : -1;
       const nextZone = ZONES[(currentIndex + delta + ZONES.length) % ZONES.length];
       if (!nextZone) return;
-      selectedZoneId = nextZone.id;
-      root.querySelectorAll('[data-zone]').forEach((zoneButton) => {
-        const active = zoneButton.dataset.zone === selectedZoneId;
-        zoneButton.classList.toggle('is-active', active);
-        zoneButton.setAttribute('aria-pressed', String(active));
-      });
+      selectZoneTab(nextZone.id);
       renderZone();
     },
     { signal },

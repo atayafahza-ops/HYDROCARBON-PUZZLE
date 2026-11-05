@@ -241,6 +241,11 @@ const PAGES = [
               <tr><td>3</td><td>prop</td><td>propana</td></tr>
               <tr><td>4</td><td>but</td><td>butana</td></tr>
               <tr><td>5</td><td>pent</td><td>pentana</td></tr>
+              <tr><td>6</td><td>heks</td><td>heksana</td></tr>
+              <tr><td>7</td><td>hept</td><td>heptana</td></tr>
+              <tr><td>8</td><td>okt</td><td>oktana</td></tr>
+              <tr><td>9</td><td>non</td><td>nonana · C₉H₂₀</td></tr>
+              <tr><td>10</td><td>dek</td><td>dekana · C₁₀H₂₂</td></tr>
             </tbody>
           </table>
         </section>
@@ -257,6 +262,11 @@ const PAGES = [
             <span class="name-token">propil</span>
           </div>
         </section>
+      </div>
+
+      <div class="codex-callout">
+        ${icon('branch', 18)}
+        <p>Rantai panjang tetap memakai aturan yang sama. Nonana dan dekana adalah rantai lurus C₉H₂₀ dan C₁₀H₂₂; begitu satu karbon tambahan menjadi cabang, rantai terpanjang yang menentukan namanya — 2-metilnonana (C₁₀H₂₂) bukan dekana, dan 2-metildekana (C₁₁H₂₄) bukan undekana.</p>
       </div>
 
       <div class="naming-example">

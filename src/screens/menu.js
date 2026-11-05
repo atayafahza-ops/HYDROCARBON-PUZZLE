@@ -16,7 +16,7 @@ import {
   getTotalXp,
   resetProgress,
 } from '../systems/save.js';
-import { getLevel } from '../data/levels.js';
+import { getLevel, ZONES } from '../data/levels.js';
 import { getSettings } from '../systems/save.js';
 
 const DIALOGUES = [
@@ -110,7 +110,7 @@ export function mountMenu(root) {
             </button>
             <button type="button" class="menu-btn menu-btn--violet" data-action="levels">
               <span class="menu-btn__icon">${icon('map', 22)}</span>
-              <span class="menu-btn__copy"><strong>Level Select</strong><span>Peta lima laboratorium</span></span>
+              <span class="menu-btn__copy"><strong>Level Select</strong><span>Peta ${ZONES.length} laboratorium</span></span>
               ${icon('chevron-right', 17)}
             </button>
             <button type="button" class="menu-btn menu-btn--amber" data-action="codex">

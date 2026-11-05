@@ -1,7 +1,7 @@
 import { formulaPlain } from './formula.js';
 
 export const MAX_VALENCE = 4;
-export const MAX_ATOMS = 8;
+export const MAX_ATOMS = 12;
 
 export function makeMolecule(nodes = [], edges = []) {
   return {
@@ -173,58 +173,81 @@ export function analyzeMolecule(molecule) {
   };
 }
 
-function permutations(items) {
-  if (items.length <= 1) return [items.slice()];
-  const result = [];
-  items.forEach((item, index) => {
-    const rest = [...items.slice(0, index), ...items.slice(index + 1)];
-    for (const permutation of permutations(rest)) {
-      result.push([item, ...permutation]);
-    }
-  });
-  return result;
-}
-
-function orderMatrix(molecule) {
+function adjacencyWithOrders(molecule) {
   const positions = new Map(molecule.nodes.map((node, index) => [node.id, index]));
-  const size = molecule.nodes.length;
-  const matrix = Array.from({ length: size }, () => Array(size).fill(0));
-
+  const adjacency = Array.from({ length: molecule.nodes.length }, () => new Map());
   for (const edge of molecule.edges) {
     const a = positions.get(edge.a);
     const b = positions.get(edge.b);
     if (a === undefined || b === undefined) continue;
-    matrix[a][b] = edge.order;
-    matrix[b][a] = edge.order;
+    adjacency[a].set(b, edge.order);
+    adjacency[b].set(a, edge.order);
   }
-
-  return matrix;
+  return adjacency;
 }
 
+function signatureOf(neighbors) {
+  return [...neighbors.values()].sort((x, y) => x - y).join('.');
+}
+
+// Backtracking over bond-order signatures, so matching a ten-carbon skeleton does not
+// stall the way the previous n! permutation scan did.
 export function areGraphsIsomorphic(a, b) {
-  if (a.nodes.length !== b.nodes.length) return false;
+  const size = a.nodes.length;
+  if (size !== b.nodes.length) return false;
   if (a.edges.length !== b.edges.length) return false;
-  if (a.nodes.length === 0) return true;
-  if (a.nodes.length > 8) return false;
+  if (size === 0) return true;
 
-  const matrixA = orderMatrix(a);
-  const matrixB = orderMatrix(b);
-  const indices = Array.from({ length: b.nodes.length }, (_, index) => index);
+  const neighborsA = adjacencyWithOrders(a);
+  const neighborsB = adjacencyWithOrders(b);
+  const keysA = neighborsA.map(signatureOf);
+  const keysB = neighborsB.map(signatureOf);
 
-  for (const permutation of permutations(indices)) {
-    let matches = true;
-    for (let i = 0; i < matrixA.length && matches; i += 1) {
-      for (let j = i + 1; j < matrixA.length; j += 1) {
-        if (matrixA[i][j] !== matrixB[permutation[i]][permutation[j]]) {
-          matches = false;
-          break;
-        }
-      }
-    }
-    if (matches) return true;
+  const buckets = new Map();
+  keysB.forEach((key, index) => {
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(index);
+  });
+
+  const tallyA = new Map();
+  for (const key of keysA) tallyA.set(key, (tallyA.get(key) ?? 0) + 1);
+  for (const [key, list] of buckets) {
+    if ((tallyA.get(key) ?? 0) !== list.length) return false;
   }
 
-  return false;
+  const visitOrder = keysA
+    .map((key, index) => index)
+    .sort((x, y) =>
+      buckets.get(keysA[x]).length - buckets.get(keysA[y]).length
+      || neighborsB[y].size - neighborsB[x].size,
+    );
+
+  const mapping = new Array(size).fill(-1);
+  const used = new Array(size).fill(false);
+
+  const isCompatible = (i, j) => {
+    for (let k = 0; k < size; k += 1) {
+      if (k === i || mapping[k] === -1) continue;
+      if ((neighborsA[i].get(k) ?? 0) !== (neighborsB[j].get(mapping[k]) ?? 0)) return false;
+    }
+    return true;
+  };
+
+  const search = (depth) => {
+    if (depth === size) return true;
+    const i = visitOrder[depth];
+    for (const j of buckets.get(keysA[i])) {
+      if (used[j] || !isCompatible(i, j)) continue;
+      mapping[i] = j;
+      used[j] = true;
+      if (search(depth + 1)) return true;
+      used[j] = false;
+      mapping[i] = -1;
+    }
+    return false;
+  };
+
+  return search(0);
 }
 
 export function getAdjacency(molecule) {

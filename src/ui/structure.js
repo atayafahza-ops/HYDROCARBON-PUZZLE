@@ -32,16 +32,15 @@ function coordsFor(molecule) {
 }
 
 function lineMarkup(x1, y1, x2, y2, className = '') {
-  return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" class="${className}"/>`;
+  return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" vector-effect="non-scaling-stroke" class="${className}"/>`;
 }
 
-function bondLines(a, b, order) {
+function bondLines(a, b, order, trim) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const length = Math.hypot(dx, dy) || 1;
   const nx = -dy / length;
   const ny = dx / length;
-  const trim = 22;
   const ux = dx / length;
   const uy = dy / length;
   const x1 = a.x + ux * trim;
@@ -84,12 +83,18 @@ export function renderStructureSVG(molecule, options = {}) {
   const viewW = Math.max(240, maxX - minX + padX * 2);
   const viewH = Math.max(190, maxY - minY + padY * 2);
 
+  // The viewBox shrinks to fit long chains, which would render C9/C10 labels as
+  // unreadable specks. Growing the user-unit font cancels that downscale.
+  const labelScale = Math.min(1.6, Math.max(1, viewW / 520));
+  const fontSize = (13 * labelScale).toFixed(1);
+  const trim = 22 * labelScale;
+
   const bonds = molecule.edges
     .map((edge) => {
       const a = coords.get(edge.a);
       const b = coords.get(edge.b);
       if (!a || !b) return '';
-      return bondLines(a, b, edge.order);
+      return bondLines(a, b, edge.order, trim);
     })
     .join('');
 
@@ -99,7 +104,7 @@ export function renderStructureSVG(molecule, options = {}) {
       if (!point) return '';
       const hydrogen = hydrogens.get(node.id) ?? 0;
       const label = hydrogen < 0 ? 'C' : hydrogenLabel(hydrogen);
-      return `<text x="${point.x}" y="${point.y}" class="structure-atom${hydrogen < 0 ? ' is-invalid' : ''}" text-anchor="middle" dominant-baseline="central">${label}</text>`;
+      return `<text x="${point.x}" y="${point.y}" style="font-size:${fontSize}px" class="structure-atom${hydrogen < 0 ? ' is-invalid' : ''}" text-anchor="middle" dominant-baseline="central">${label}</text>`;
     })
     .join('');
 

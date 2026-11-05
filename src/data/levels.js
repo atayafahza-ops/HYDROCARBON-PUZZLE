@@ -1,5 +1,5 @@
 import { analyzeMolecule } from '../chemistry/graph.js';
-import { describeStructure } from '../chemistry/nomenclature.js';
+import { describeStructure, tokenType } from '../chemistry/nomenclature.js';
 import { formulaUnicode } from '../chemistry/formula.js';
 
 const atom = (id, x, y) => ({ id, x, y });
@@ -38,9 +38,11 @@ function chainWithBond(count, locant, order) {
   );
 }
 
-function branched(parentLength, branches) {
+function branched(parentLength, branches, bondSpec = null) {
   const nodes = zigzag(parentLength);
-  const edges = Array.from({ length: parentLength - 1 }, (_, index) => bond(index, index + 1));
+  const edges = Array.from({ length: parentLength - 1 }, (_, index) =>
+    bond(index, index + 1, bondSpec && index === bondSpec.locant - 1 ? bondSpec.order : 1),
+  );
   const used = new Map();
   let nextId = parentLength;
 
@@ -128,6 +130,61 @@ export const ZONES = [
     description: 'Menggabungkan semua mekanik menjadi tantangan akhir.',
     slotStart: 41,
   },
+  {
+    id: 'heavy-chain',
+    name: 'Heavy Chain Vault',
+    shortName: 'Heavy Chain',
+    index: 6,
+    icon: 'atom',
+    accent: 'cyan',
+    status: 'available',
+    description: 'Rantai sembilan dan sepuluh karbon beserta cabang metil dan etil pertama.',
+    slotStart: 51,
+  },
+  {
+    id: 'naming-forge',
+    name: 'Naming Forge',
+    shortName: 'Naming Forge',
+    index: 7,
+    icon: 'target',
+    accent: 'teal',
+    status: 'available',
+    description: 'Bolak-balik nama dan struktur dengan lebih dari satu cabang.',
+    slotStart: 61,
+  },
+  {
+    id: 'isomer-lab',
+    name: 'Isomer Analysis Lab',
+    shortName: 'Isomer Analysis',
+    index: 8,
+    icon: 'eye',
+    accent: 'lime',
+    status: 'available',
+    description: 'Kerangka berbeda dengan rumus yang sama, lengkap dengan penomoran.',
+    slotStart: 71,
+  },
+  {
+    id: 'bond-spectrum',
+    name: 'Bond Spectrum Wing',
+    shortName: 'Bond Spectrum',
+    index: 9,
+    icon: 'spark',
+    accent: 'orange',
+    status: 'available',
+    description: 'Alkana, alkena, dan alkuna pada rantai panjang.',
+    slotStart: 81,
+  },
+  {
+    id: 'master-archive',
+    name: 'Master Archive',
+    shortName: 'Master Archive',
+    index: 10,
+    icon: 'trophy',
+    accent: 'gold',
+    status: 'available',
+    description: 'Tantangan gabungan multi-langkah memakai seluruh aturan tata nama.',
+    slotStart: 91,
+  },
 ];
 
 const ZONE_INDEX = new Map(ZONES.map((zone) => [zone.id, zone.index]));
@@ -147,14 +204,53 @@ export const DIFFICULTY_LABELS = [
   'Master',
 ];
 
-const difficultyFor = (id) => Math.ceil(id / 5);
+const difficultyFor = (id) => Math.min(DIFFICULTY_LABELS.length, Math.ceil(id / 10));
 
 export const NAME_TOKEN_BANK = {
-  numbers: ['1', '2', '3', '4', '5'],
-  substituents: ['metil', 'etil', 'propil'],
-  stems: ['met', 'et', 'prop', 'but', 'pent', 'heks', 'hept', 'okt'],
+  numbers: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+  substituents: ['metil', 'dimetil', 'trimetil', 'tetrametil', 'etil', 'dietil', 'propil'],
+  stems: ['met', 'et', 'prop', 'but', 'pent', 'heks', 'hept', 'okt', 'non', 'dek'],
   suffixes: ['-ana', '-ena', '-una'],
 };
+
+const locantOrder = (a, b) =>
+  Number(a.split(',')[0]) - Number(b.split(',')[0]) || a.length - b.length || a.localeCompare(b);
+
+// Every answer token is guaranteed to be in the bank; the neighbouring stems, base
+// substituent words and extra positions stay as deliberate distractors.
+function bankFor(tokens) {
+  const numbers = new Set(['1', '2', '3']);
+  const substituents = new Set(['metil', 'etil']);
+  const stems = new Set();
+
+  for (const token of tokens) {
+    const type = tokenType(token);
+    if (type === 'locant') {
+      numbers.add(token);
+      for (const digit of token.split(',')) numbers.add(digit);
+    } else if (type === 'substituent') {
+      substituents.add(token);
+      substituents.add(token.replace(/^(?:di|tri|tetra)/, ''));
+    } else if (type === 'stem') {
+      stems.add(token);
+    }
+  }
+
+  for (const stem of [...stems]) {
+    const index = NAME_TOKEN_BANK.stems.indexOf(stem);
+    for (const offset of [-1, 1]) {
+      const neighbor = NAME_TOKEN_BANK.stems[index + offset];
+      if (neighbor) stems.add(neighbor);
+    }
+  }
+
+  return {
+    numbers: [...numbers].sort(locantOrder),
+    substituents: NAME_TOKEN_BANK.substituents.filter((token) => substituents.has(token)),
+    stems: NAME_TOKEN_BANK.stems.filter((stem) => stems.has(stem)),
+    suffixes: NAME_TOKEN_BANK.suffixes,
+  };
+}
 
 export const METHANE = chain(1);
 export const PROPANE = chain(3);
@@ -199,6 +295,59 @@ const TRIMETHYLBUTANE_223 = branched(4, [{ at: 2 }, { at: 2 }, { at: 3 }]);
 const TRIMETHYLPENTANE_224 = branched(5, [{ at: 2 }, { at: 2 }, { at: 4 }]);
 const TRIMETHYLPENTANE_234 = branched(5, [{ at: 2 }, { at: 3 }, { at: 4 }]);
 const TETRAMETHYLBUTANE = branched(4, [{ at: 2 }, { at: 2 }, { at: 3 }, { at: 3 }]);
+
+// Rantai panjang (zona 6 dan seterusnya): nonana, dekana, serta turunannya.
+const NONANE = chain(9);
+const DEKANA = chain(10);
+const METHYLNONANE_2 = branched(9, [{ at: 2 }]);
+const METHYLNONANE_3 = branched(9, [{ at: 3 }]);
+const METHYLNONANE_4 = branched(9, [{ at: 4 }]);
+const METHYLDEKANE_2 = branched(10, [{ at: 2 }]);
+const METHYLDEKANE_3 = branched(10, [{ at: 3 }]);
+const ETHYLNONANE_2 = branched(9, [{ at: 2, size: 2 }]);
+const ETHYLOCTANE_3 = branched(8, [{ at: 3, size: 2 }]);
+const ETHYLOCTANE_4 = branched(8, [{ at: 4, size: 2 }]);
+const ETHYLHEPTANE_3 = branched(7, [{ at: 3, size: 2 }]);
+const ETHYLHEPTANE_4 = branched(7, [{ at: 4, size: 2 }]);
+const DIMETHYLHEXANE_23 = branched(6, [{ at: 2 }, { at: 3 }]);
+const DIMETHYLHEPTANE_23 = branched(7, [{ at: 2 }, { at: 3 }]);
+const DIMETHYLHEPTANE_25 = branched(7, [{ at: 2 }, { at: 5 }]);
+const DIMETHYLHEPTANE_34 = branched(7, [{ at: 3 }, { at: 4 }]);
+const DIMETHYLOCTANE_22 = branched(8, [{ at: 2 }, { at: 2 }]);
+const DIMETHYLOCTANE_26 = branched(8, [{ at: 2 }, { at: 6 }]);
+const DIMETHYLOCTANE_35 = branched(8, [{ at: 3 }, { at: 5 }]);
+const DIMETHYLNONANE_22 = branched(9, [{ at: 2 }, { at: 2 }]);
+const DIMETHYLNONANE_24 = branched(9, [{ at: 2 }, { at: 4 }]);
+const DIMETHYLNONANE_26 = branched(9, [{ at: 2 }, { at: 6 }]);
+const TRIMETHYLHEXANE_235 = branched(6, [{ at: 2 }, { at: 3 }, { at: 5 }]);
+const TRIMETHYLHEPTANE_223 = branched(7, [{ at: 2 }, { at: 2 }, { at: 3 }]);
+const TRIMETHYLHEPTANE_234 = branched(7, [{ at: 2 }, { at: 3 }, { at: 4 }]);
+const TRIMETHYLOCTANE_246 = branched(8, [{ at: 2 }, { at: 4 }, { at: 6 }]);
+const TRIMETHYLNONANE_235 = branched(9, [{ at: 2 }, { at: 3 }, { at: 5 }]);
+const TETRAMETHYLHEXANE_2345 = branched(6, [
+  { at: 2 },
+  { at: 3 },
+  { at: 4 },
+  { at: 5 },
+]);
+const ETHYLDIMETHYLHEXANE_33 = branched(6, [{ at: 3, size: 2 }, { at: 3 }]);
+const ETHYLMETHYLOCTANE_35 = branched(8, [{ at: 3, size: 2 }, { at: 5 }]);
+const ETHYLMETHYLOCTANE_42 = branched(8, [{ at: 4, size: 2 }, { at: 2 }]);
+const DIETHYLHEPTANE_34 = branched(7, [{ at: 3, size: 2 }, { at: 4, size: 2 }]);
+const DIETHYLHEPTANE_35 = branched(7, [{ at: 3, size: 2 }, { at: 5, size: 2 }]);
+
+const NONEN_2 = chainWithBond(9, 2, 2);
+const NONEN_3 = chainWithBond(9, 3, 2);
+const NONEN_4 = chainWithBond(9, 4, 2);
+const DEKEN_3 = chainWithBond(10, 3, 2);
+const DEKEN_5 = chainWithBond(10, 5, 2);
+const NONUN_2 = chainWithBond(9, 2, 3);
+const DEKUN_1 = chainWithBond(10, 1, 3);
+const DEKUN_3 = chainWithBond(10, 3, 3);
+const DEKUN_4 = chainWithBond(10, 4, 3);
+const METHYLHEPTENE_4 = branched(7, [{ at: 4 }], { locant: 2, order: 2 });
+const METHYLNONENE_2 = branched(9, [{ at: 2 }], { locant: 1, order: 2 });
+const METHYLHEPTYNE_4 = branched(7, [{ at: 4 }], { locant: 1, order: 3 });
 
 function defaultTagline(category) {
   return {
@@ -294,9 +443,21 @@ function namingScaffold(displayGraph, tokens) {
 }
 
 function slotLabelsFor(tokens) {
-  return tokens.length >= 4
-    ? ['Posisi cabang', 'Substituen', 'Rantai induk', 'Akhiran']
-    : ['Posisi', 'Rantai induk', 'Akhiran'];
+  const branched = tokens.some((token) => tokenType(token) === 'substituent');
+  return tokens.map((token) => {
+    switch (tokenType(token)) {
+      case 'locant':
+        return branched ? 'Posisi cabang' : 'Posisi ikatan';
+      case 'substituent':
+        return 'Substituen';
+      case 'stem':
+        return 'Rantai induk';
+      case 'suffix':
+        return 'Akhiran';
+      default:
+        return 'Bagian nama';
+    }
+  });
 }
 
 function buildExplanation(name, molecule, category, extra = '') {
@@ -375,6 +536,7 @@ function formulaLevel(config) {
     displayGraph,
     explanation,
     bonus = '',
+    requireBranched = false,
   } = config;
   const scaffold = formulaScaffold(carbon, hydrogen, category, categoryLabel);
 
@@ -402,6 +564,7 @@ function formulaLevel(config) {
       formula: `C${carbon}H${hydrogen}`,
       category,
       requireAcyclic: true,
+      ...(requireBranched ? { requireBranched: true } : {}),
     },
     displayGraph,
     dynamicResult: true,
@@ -455,7 +618,7 @@ function nameLevel(config) {
       expectedTokens: tokens,
       answerName,
       altNames,
-      bank: NAME_TOKEN_BANK,
+      bank: bankFor(tokens),
       slotLabels: slotLabelsFor(tokens),
     },
     displayGraph,
@@ -517,7 +680,7 @@ function comboLevel(config) {
       expectedTokens: tokens,
       answerName,
       altNames,
-      bank: NAME_TOKEN_BANK,
+      bank: bankFor(tokens),
       slotLabels: slotLabelsFor(tokens),
     },
     result: {
@@ -1163,6 +1326,687 @@ export const LEVELS = [
     category: 'alkana',
     categoryLabel: 'Alkana',
     extra: 'Dengan delapan karbon dan empat cabang metil, struktur ini merangkum seluruh aturan valensi dan penomoran yang telah dipelajari.',
+  }),
+  buildLevel({
+    id: 51,
+    zoneId: 'heavy-chain',
+    title: 'Sembilan Karbon Lurus',
+    focus: 'Rantai nonana',
+    mission: 'Susun nonana: sembilan atom karbon dalam satu rantai lurus tanpa cabang.',
+    molecule: NONANE,
+    name: 'Nonana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    extra: 'Nonana mengikuti rumus alkana CₙH₂ₙ₊₂: sembilan karbon mengikat 2 × 9 + 2 = 20 hidrogen.',
+  }),
+  nameLevel({
+    id: 52,
+    zoneId: 'heavy-chain',
+    title: 'Nama Rantai Sembilan',
+    focus: 'Tata nama nonana',
+    mission: 'Arsip hanya menyisakan strukturnya. Susun nama IUPAC senyawa ini.',
+    displayGraph: NONANE,
+    answerName: 'nonana',
+    tokens: ['non', '-ana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Sembilan karbon • hanya ikatan tunggal',
+  }),
+  formulaLevel({
+    id: 53,
+    zoneId: 'heavy-chain',
+    title: 'Detektor C₉H₂₀',
+    focus: 'Rumus alkana panjang',
+    mission: 'Bentuk salah satu alkana rantai terbuka dengan rumus C₉H₂₀.',
+    carbon: 9,
+    hydrogen: 20,
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Sembilan karbon • alkana rantai terbuka',
+    displayGraph: NONANE,
+    explanation:
+      'C₉H₂₀ dipenuhi oleh nonana dan seluruh isomernya. Yang dinilai adalah jumlah atom, seluruh ikatan tunggal, dan rantai terbuka — bukan bentuk gambarnya.',
+    bonus: 'Alkana rantai terbuka selalu memakai CₙH₂ₙ₊₂.',
+  }),
+  buildLevel({
+    id: 54,
+    zoneId: 'heavy-chain',
+    title: 'Rantai Terpanjang',
+    focus: 'Rantai dekana',
+    mission: 'Susun dekana, rantai lurus terpanjang yang dipelajari di laboratorium ini.',
+    molecule: DEKANA,
+    name: 'Dekana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    extra: 'Dekana adalah alkana C₁₀H₂₂: sepuluh karbon mengikat 2 × 10 + 2 = 22 hidrogen.',
+  }),
+  nameLevel({
+    id: 55,
+    zoneId: 'heavy-chain',
+    title: 'Sepuluh Karbon Tunggal',
+    focus: 'Tata nama dekana',
+    mission: 'Sepuluh karbon tersusun dalam satu rantai lurus. Tentukan namanya.',
+    displayGraph: DEKANA,
+    answerName: 'dekana',
+    tokens: ['dek', '-ana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Sepuluh karbon • hanya ikatan tunggal',
+  }),
+  buildLevel({
+    id: 56,
+    zoneId: 'heavy-chain',
+    title: 'Metil di Ujung Rantai',
+    focus: 'Cabang pada nonana',
+    mission: 'Bangun 2-metilnonana: induk sembilan karbon dengan satu cabang metil di posisi 2.',
+    molecule: METHYLNONANE_2,
+    name: '2-metilnonana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    extra:
+      'Meskipun totalnya sepuluh karbon, rantai terpanjangnya sembilan karbon — jadi senyawa ini turunan nonana, bukan dekana lurus.',
+  }),
+  nameLevel({
+    id: 57,
+    zoneId: 'heavy-chain',
+    title: 'Cabang Posisi Tiga',
+    focus: 'Penomoran cabang',
+    mission: 'Pilih rantai induk terpanjang lebih dulu, lalu beri nomor dari ujung terdekat dengan cabang.',
+    displayGraph: METHYLNONANE_3,
+    answerName: '3-metilnonana',
+    tokens: ['3', 'metil', 'non', '-ana'],
+    altNames: ['3-metil-nonana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk sembilan karbon • satu cabang metil',
+  }),
+  comboLevel({
+    id: 58,
+    zoneId: 'heavy-chain',
+    title: 'Metildekana Posisi Dua',
+    focus: 'Struktur + nama C11',
+    mission: 'Bangun 2-metildekana, lalu susun namanya dari token yang tersedia.',
+    molecule: METHYLDEKANE_2,
+    buildName: '2-metildekana',
+    answerName: '2-metildekana',
+    tokens: ['2', 'metil', 'dek', '-ana'],
+    altNames: ['2-metil-dekana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk sepuluh karbon • cabang metil posisi 2',
+  }),
+  buildLevel({
+    id: 59,
+    zoneId: 'heavy-chain',
+    title: 'Metildekana Posisi Tiga',
+    focus: 'Cabang di tengah rantai',
+    mission: 'Susun 3-metildekana: induk sepuluh karbon dengan cabang metil pada karbon ketiga.',
+    molecule: METHYLDEKANE_3,
+    name: '3-metildekana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  nameLevel({
+    id: 60,
+    zoneId: 'heavy-chain',
+    title: 'Etil yang Menjebak',
+    focus: 'Menentukan rantai induk',
+    mission: 'Cabang etil tampak memanjangkan rantai. Temukan jalur terpanjang yang sah, lalu namai.',
+    displayGraph: ETHYLOCTANE_3,
+    answerName: '3-etiloktana',
+    tokens: ['3', 'etil', 'okt', '-ana'],
+    altNames: ['3-etil-oktana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk delapan karbon • cabang etil dua karbon',
+  }),
+  nameLevel({
+    id: 61,
+    zoneId: 'naming-forge',
+    title: 'Dua Cabang Berdekatan',
+    focus: 'Posisi berkelompok',
+    mission: 'Dua cabang menempel pada karbon yang bersebelahan. Tulis kedua posisi dalam satu token.',
+    displayGraph: DIMETHYLHEPTANE_23,
+    answerName: '2,3-dimetilheptana',
+    tokens: ['2,3', 'dimetil', 'hept', '-ana'],
+    altNames: ['2,3-dimetil-heptana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk tujuh karbon • dua cabang metil',
+  }),
+  buildLevel({
+    id: 62,
+    zoneId: 'naming-forge',
+    title: 'Cabang di Dua Ujung',
+    focus: 'Simetri cabang',
+    mission: 'Bangun 2,6-dimetiloktana dengan kedua cabang metil di ujung yang berlawanan.',
+    molecule: DIMETHYLOCTANE_26,
+    name: '2,6-dimetiloktana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  comboLevel({
+    id: 63,
+    zoneId: 'naming-forge',
+    title: 'Tiga Cabang Sekaligus',
+    focus: 'Struktur + nama bercabang',
+    mission: 'Susun kerangka 2,3,4-trimetilheptana, lalu tuliskan namanya.',
+    molecule: TRIMETHYLHEPTANE_234,
+    buildName: '2,3,4-trimetilheptana',
+    answerName: '2,3,4-trimetilheptana',
+    tokens: ['2,3,4', 'trimetil', 'hept', '-ana'],
+    altNames: ['2,3,4-trimetil-heptana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk tujuh karbon • tiga cabang metil',
+  }),
+  nameLevel({
+    id: 64,
+    zoneId: 'naming-forge',
+    title: 'Dua Cabang Satu Karbon',
+    focus: 'Urutan abjad substituen',
+    mission: 'Dua cabang berbagi satu karbon induk. Sebutkan substituen sesuai urutan abjad.',
+    displayGraph: ETHYLDIMETHYLHEXANE_33,
+    answerName: '3-etil-3-metilheksana',
+    tokens: ['3', 'etil', '3', 'metil', 'heks', '-ana'],
+    altNames: ['3-etil-3-metil-heksana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk enam karbon • etil dan metil di posisi 3',
+  }),
+  buildLevel({
+    id: 65,
+    zoneId: 'naming-forge',
+    title: 'Tiga dan Empat',
+    focus: 'Cabang berdampingan',
+    mission: 'Susun 3,4-dimetilheptana: dua cabang metil pada karbon yang berdampingan.',
+    molecule: DIMETHYLHEPTANE_34,
+    name: '3,4-dimetilheptana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  nameLevel({
+    id: 66,
+    zoneId: 'naming-forge',
+    title: 'Rangkaian Posisi Terkecil',
+    focus: 'First point of difference',
+    mission: 'Bandingkan dua arah penomoran, lalu pilih rangkaian posisi yang lebih kecil.',
+    displayGraph: TRIMETHYLHEXANE_235,
+    answerName: '2,3,5-trimetilheksana',
+    tokens: ['2,3,5', 'trimetil', 'heks', '-ana'],
+    altNames: ['2,3,5-trimetil-heksana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk enam karbon • tiga cabang metil',
+  }),
+  comboLevel({
+    id: 67,
+    zoneId: 'naming-forge',
+    title: 'Etil dan Metil Berbarengan',
+    focus: 'Dua jenis cabang',
+    mission: 'Bangun strukturnya lebih dulu, lalu urutkan substituen secara abjad.',
+    molecule: ETHYLMETHYLOCTANE_35,
+    buildName: '3-etil-5-metiloktana',
+    answerName: '3-etil-5-metiloktana',
+    tokens: ['3', 'etil', '5', 'metil', 'okt', '-ana'],
+    altNames: ['3-etil-5-metil-oktana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk delapan karbon • satu etil dan satu metil',
+  }),
+  buildLevel({
+    id: 68,
+    zoneId: 'naming-forge',
+    title: 'Dua Etil Bersebelahan',
+    focus: 'Cabang etil ganda',
+    mission: 'Bangun 3,4-dietilheptana: dua cabang etil pada karbon 3 dan 4.',
+    molecule: DIETHYLHEPTANE_34,
+    name: '3,4-dietilheptana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  nameLevel({
+    id: 69,
+    zoneId: 'naming-forge',
+    title: 'Dua dan Lima',
+    focus: 'Penomoran simetris',
+    mission: 'Cabang tersebar simetris di sepanjang rantai. Tetap mulai penomoran dari ujung terdekat.',
+    displayGraph: DIMETHYLHEPTANE_25,
+    answerName: '2,5-dimetilheptana',
+    tokens: ['2,5', 'dimetil', 'hept', '-ana'],
+    altNames: ['2,5-dimetil-heptana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk tujuh karbon • metil di posisi 2 dan 5',
+  }),
+  comboLevel({
+    id: 70,
+    zoneId: 'naming-forge',
+    title: 'Tiga dan Lima',
+    focus: 'Struktur + nama C10',
+    mission: 'Susun 3,5-dimetiloktana, lalu pasang namanya pada slot.',
+    molecule: DIMETHYLOCTANE_35,
+    buildName: '3,5-dimetiloktana',
+    answerName: '3,5-dimetiloktana',
+    tokens: ['3,5', 'dimetil', 'okt', '-ana'],
+    altNames: ['3,5-dimetil-oktana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk delapan karbon • dua cabang metil',
+  }),
+  formulaLevel({
+    id: 71,
+    zoneId: 'isomer-lab',
+    title: 'Berburu Isomer C₈H₁₈',
+    focus: 'Isomer alkana',
+    mission: 'Bentuk salah satu isomer C₈H₁₈ dengan kerangka bercabang.',
+    carbon: 8,
+    hydrogen: 18,
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Delapan karbon • kerangka bercabang',
+    displayGraph: DIMETHYLHEXANE_23,
+    requireBranched: true,
+    explanation:
+      'C₈H₁₈ memiliki banyak isomer: oktana lurus, metilheptana, sampai dimetilheksana. Semua sah selama valensi terpenuhi dan rantainya terbuka — misi ini hanya meminta kerangka yang bercabang.',
+    bonus: 'Isomer = rumus molekul sama, susunan atom berbeda.',
+  }),
+  buildLevel({
+    id: 72,
+    zoneId: 'isomer-lab',
+    title: 'Dimetilheksana',
+    focus: 'Kerangka bercabang C8',
+    mission: 'Bangun salah satu isomer C₈H₁₈: 2,3-dimetilheksana.',
+    molecule: DIMETHYLHEXANE_23,
+    name: '2,3-dimetilheksana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    extra: 'Rantai induk diambil dari jalur terpanjang, bukan dari rantai yang tampak lurus di gambar.',
+  }),
+  nameLevel({
+    id: 73,
+    zoneId: 'isomer-lab',
+    title: 'Isomer Nonana',
+    focus: 'Bandingkan isomer',
+    mission: 'Struktur ini salah satu isomer nonana: rumus sama, kerangka berbeda. Tentukan rantai induknya.',
+    displayGraph: ETHYLHEPTANE_3,
+    answerName: '3-etilheptana',
+    tokens: ['3', 'etil', 'hept', '-ana'],
+    altNames: ['3-etil-heptana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk tujuh karbon • cabang etil posisi 3',
+  }),
+  buildLevel({
+    id: 74,
+    zoneId: 'isomer-lab',
+    title: 'Etil di Tengah',
+    focus: 'Isomer dengan etil',
+    mission: 'Susun 4-etilheptana, isomer C₉H₂₀ dengan cabang etil di tengah rantai.',
+    molecule: ETHYLHEPTANE_4,
+    name: '4-etilheptana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  nameLevel({
+    id: 75,
+    zoneId: 'isomer-lab',
+    title: 'Empat Cabang Metil',
+    focus: 'Pengali tetra',
+    mission: 'Empat cabang metil menempel pada induk enam karbon. Kelompokkan seluruh posisinya.',
+    displayGraph: TETRAMETHYLHEXANE_2345,
+    answerName: '2,3,4,5-tetrametilheksana',
+    tokens: ['2,3,4,5', 'tetrametil', 'heks', '-ana'],
+    altNames: ['2,3,4,5-tetrametil-heksana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk enam karbon • empat cabang metil',
+  }),
+  buildLevel({
+    id: 76,
+    zoneId: 'isomer-lab',
+    title: 'Sebelas Karbon',
+    focus: 'Isomer C₁₁H₂₄',
+    mission: 'Bangun 2,4-dimetilnonana: sebelas karbon dengan rantai induk sembilan.',
+    molecule: DIMETHYLNONANE_24,
+    name: '2,4-dimetilnonana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  nameLevel({
+    id: 77,
+    zoneId: 'isomer-lab',
+    title: 'Isomer Lain C₁₁H₂₄',
+    focus: 'Isomer dengan posisi berbeda',
+    mission: 'Kedua cabang berada jauh di ujung. Rantai induknya tetap sembilan karbon.',
+    displayGraph: DIMETHYLNONANE_26,
+    answerName: '2,6-dimetilnonana',
+    tokens: ['2,6', 'dimetil', 'non', '-ana'],
+    altNames: ['2,6-dimetil-nonana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk sembilan karbon • metil di posisi 2 dan 6',
+  }),
+  formulaLevel({
+    id: 78,
+    zoneId: 'isomer-lab',
+    title: 'Kerangka C₁₀H₂₂',
+    focus: 'Isomer alkana panjang',
+    mission: 'Bentuk alkana rantai terbuka C₁₀H₂₂ yang bercabang.',
+    carbon: 10,
+    hydrogen: 22,
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Sepuluh karbon • minimal satu cabang',
+    displayGraph: TRIMETHYLHEPTANE_223,
+    requireBranched: true,
+    explanation:
+      'C₁₀H₂₂ memenuhi CₙH₂ₙ₊₂ untuk n = 10. Banyak kerangka bercabang sah, misalnya 2,2,3-trimetilheptana — selama sepuluh karbon tersatu, terbuka, dan bercabang.',
+    bonus: 'Rumus CₙH₂ₙ₊₂ berlaku untuk alkana lurus maupun bercabang.',
+  }),
+  comboLevel({
+    id: 79,
+    zoneId: 'isomer-lab',
+    title: 'Selang Satu Karbon',
+    focus: 'Struktur + nama isomer',
+    mission: 'Susun 2,4,6-trimetiloktana, lalu tulis namanya dengan posisi berkelompok.',
+    molecule: TRIMETHYLOCTANE_246,
+    buildName: '2,4,6-trimetiloktana',
+    answerName: '2,4,6-trimetiloktana',
+    tokens: ['2,4,6', 'trimetil', 'okt', '-ana'],
+    altNames: ['2,4,6-trimetil-oktana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk delapan karbon • tiga cabang metil berselang-seling',
+  }),
+  nameLevel({
+    id: 80,
+    zoneId: 'isomer-lab',
+    title: 'Dua Cabang di Karbon Sama',
+    focus: 'Mengulang satu posisi',
+    mission: 'Dua cabang menempel pada karbon yang sama. Tetap tulis posisinya untuk setiap substituen.',
+    displayGraph: DIMETHYLOCTANE_22,
+    answerName: '2,2-dimetiloktana',
+    tokens: ['2,2', 'dimetil', 'okt', '-ana'],
+    altNames: ['2,2-dimetil-oktana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk delapan karbon • dua metil di posisi 2',
+  }),
+  buildLevel({
+    id: 81,
+    zoneId: 'bond-spectrum',
+    title: 'Nonena Rangkap Dua',
+    focus: 'Alkena rantai panjang',
+    mission: 'Bangun 2-nonena: rantai sembilan karbon dengan ikatan rangkap dua mulai karbon 2.',
+    molecule: NONEN_2,
+    name: '2-nonena',
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+    extra: 'Alkena rantai terbuka dengan satu ikatan rangkap dua memakai CₙH₂ₙ, sehingga nonena mengikat 18 hidrogen.',
+  }),
+  nameLevel({
+    id: 82,
+    zoneId: 'bond-spectrum',
+    title: 'Posisi Ikatan Rangkap',
+    focus: 'Penomoran alkena',
+    mission: 'Nomor rantai dari ujung yang paling dekat dengan ikatan rangkap dua.',
+    displayGraph: NONEN_4,
+    answerName: '4-nonena',
+    tokens: ['4', 'non', '-ena'],
+    altNames: ['non-4-ena'],
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+    clue: 'Sembilan karbon • ikatan rangkap dua posisi 4',
+  }),
+  buildLevel({
+    id: 83,
+    zoneId: 'bond-spectrum',
+    title: 'Dekena',
+    focus: 'Alkena sepuluh karbon',
+    mission: 'Susun 3-dekena, alkena sepuluh karbon dengan ikatan rangkap dua pada posisi 3.',
+    molecule: DEKEN_3,
+    name: '3-dekena',
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+  }),
+  formulaLevel({
+    id: 84,
+    zoneId: 'bond-spectrum',
+    title: 'Rumus C₁₀H₂₀',
+    focus: 'Alkena rantai terbuka',
+    mission: 'Bentuk salah satu alkena rantai terbuka dengan rumus C₁₀H₂₀.',
+    carbon: 10,
+    hydrogen: 20,
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+    clue: 'Sepuluh karbon • satu ikatan rangkap dua',
+    displayGraph: DEKEN_5,
+    explanation:
+      'C₁₀H₂₀ menuntut tepat satu ikatan rangkap dua dan rantai terbuka. 3-dekena, 5-dekena, serta kerangka bercabang sama-sama sah.',
+    bonus: 'Alkena dengan satu C=C: CₙH₂ₙ.',
+  }),
+  nameLevel({
+    id: 85,
+    zoneId: 'bond-spectrum',
+    title: 'Tepat di Tengah',
+    focus: 'Ikatan rangkap simetris',
+    mission: 'Ikatan rangkap dua berada di tengah rantai. Posisi terkecil yang mungkin tetap tercatat.',
+    displayGraph: DEKEN_5,
+    answerName: '5-dekena',
+    tokens: ['5', 'dek', '-ena'],
+    altNames: ['dek-5-ena'],
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+    clue: 'Sepuluh karbon • ikatan rangkap dua posisi 5',
+  }),
+  buildLevel({
+    id: 86,
+    zoneId: 'bond-spectrum',
+    title: 'Nonena Rangkap Tiga',
+    focus: 'Alkuna rantai panjang',
+    mission: 'Bangun 2-nonuna: alkuna sembilan karbon dengan ikatan rangkap tiga pada posisi 2.',
+    molecule: NONUN_2,
+    name: '2-nonuna',
+    category: 'alkuna',
+    categoryLabel: 'Alkuna',
+    extra: 'Alkuna dengan satu ikatan rangkap tiga mengikuti CₙH₂ₙ₋₂: sembilan karbon mengikat 16 hidrogen.',
+  }),
+  comboLevel({
+    id: 87,
+    zoneId: 'bond-spectrum',
+    title: 'Ujung Rantai Aktif',
+    focus: 'Struktur + nama alkuna',
+    mission: 'Bangun 1-dekuna, alkuna sepuluh karbon dengan ikatan rangkap tiga di ujung, lalu susun namanya.',
+    molecule: DEKUN_1,
+    buildName: '1-dekuna',
+    answerName: '1-dekuna',
+    tokens: ['1', 'dek', '-una'],
+    altNames: ['dek-1-una'],
+    category: 'alkuna',
+    categoryLabel: 'Alkuna',
+    clue: 'Sepuluh karbon • ikatan rangkap tiga posisi 1',
+  }),
+  nameLevel({
+    id: 88,
+    zoneId: 'bond-spectrum',
+    title: 'Dekuna Posisi Tiga',
+    focus: 'Tata nama alkuna',
+    mission: 'Tentukan posisi ikatan rangkap tiga dari ujung terdekat, lalu pasang tokennya.',
+    displayGraph: DEKUN_3,
+    answerName: '3-dekuna',
+    tokens: ['3', 'dek', '-una'],
+    altNames: ['dek-3-una'],
+    category: 'alkuna',
+    categoryLabel: 'Alkuna',
+    clue: 'Sepuluh karbon • ikatan rangkap tiga posisi 3',
+  }),
+  buildLevel({
+    id: 89,
+    zoneId: 'bond-spectrum',
+    title: 'Cabang pada Alkena',
+    focus: 'Alkena bercabang',
+    mission: 'Bangun 4-metil-2-heptena: induk tujuh karbon, ikatan rangkap dua di posisi 2, cabang metil di posisi 4.',
+    molecule: METHYLHEPTENE_4,
+    name: '4-metil-2-heptena',
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+  }),
+  nameLevel({
+    id: 90,
+    zoneId: 'bond-spectrum',
+    title: 'Induk Wajib Memuat Rangkap Tiga',
+    focus: 'Alkuna bercabang',
+    mission: 'Rantai induk harus memuat ikatan rangkap tiga, walau jalur lain terlihat lebih panjang.',
+    displayGraph: METHYLHEPTYNE_4,
+    answerName: '4-metil-1-heptuna',
+    tokens: ['4', 'metil', '1', 'hept', '-una'],
+    altNames: ['4-metil-hept-1-una'],
+    category: 'alkuna',
+    categoryLabel: 'Alkuna',
+    clue: 'Tujuh karbon pada induk • rangkap tiga di ujung',
+  }),
+  comboLevel({
+    id: 91,
+    zoneId: 'master-archive',
+    title: 'Cabang di Tengah Nonana',
+    focus: 'Bangun lalu namai',
+    mission: 'Bangun 4-metilnonana dari sembilan karbon induk, lalu susun namanya.',
+    molecule: METHYLNONANE_4,
+    buildName: '4-metilnonana',
+    answerName: '4-metilnonana',
+    tokens: ['4', 'metil', 'non', '-ana'],
+    altNames: ['4-metil-nonana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk sembilan karbon • satu cabang metil di tengah',
+  }),
+  nameLevel({
+    id: 92,
+    zoneId: 'master-archive',
+    title: 'Sepuluh Karbon, Induk Delapan',
+    focus: 'Rantai induk vs total karbon',
+    mission: 'Total sepuluh karbon, tetapi rantai induk hanya delapan. Jelaskan lewat nama.',
+    displayGraph: ETHYLOCTANE_4,
+    answerName: '4-etiloktana',
+    tokens: ['4', 'etil', 'okt', '-ana'],
+    altNames: ['4-etil-oktana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk delapan karbon • cabang etil posisi 4',
+  }),
+  nameLevel({
+    id: 93,
+    zoneId: 'master-archive',
+    title: 'Koreksi Label Arsip',
+    focus: 'Nama yang salah tulis',
+    mission: 'Label arsip tertulis \u201c2-etilnonana\u201d. Periksa ulang rantai terpanjang, lalu koreksi namanya.',
+    displayGraph: ETHYLNONANE_2,
+    answerName: '3-metildekana',
+    tokens: ['3', 'metil', 'dek', '-ana'],
+    altNames: ['3-metil-dekana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Cabang di posisi dua membuat rantai induk ikut memanjang',
+    extra: 'Nama \u201c2-etilnonana\u201d menyalahi aturan: jalur terpanjang pada kerangka ini mencapai sepuluh karbon, sehingga senyawa tersebut adalah 3-metildekana.',
+  }),
+  buildLevel({
+    id: 94,
+    zoneId: 'master-archive',
+    title: 'Cabang Kembar di Ujung',
+    focus: 'Dua cabang satu posisi',
+    mission: 'Susun 2,2-dimetilnonana: sebelas karbon dengan dua cabang metil pada karbon yang sama.',
+    molecule: DIMETHYLNONANE_22,
+    name: '2,2-dimetilnonana',
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+  }),
+  nameLevel({
+    id: 95,
+    zoneId: 'master-archive',
+    title: 'Cabang Banyak pada C12',
+    focus: 'Rangkaian posisi lengkap',
+    mission: 'Tiga cabang pada induk sembilan karbon. Urutkan posisi dari terkecil dan pakai pengali yang tepat.',
+    displayGraph: TRIMETHYLNONANE_235,
+    answerName: '2,3,5-trimetilnonana',
+    tokens: ['2,3,5', 'trimetil', 'non', '-ana'],
+    altNames: ['2,3,5-trimetil-nonana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk sembilan karbon • tiga cabang metil',
+  }),
+  formulaLevel({
+    id: 96,
+    zoneId: 'master-archive',
+    title: 'Batas Rumus C₁₁H₂₄',
+    focus: 'Alkana di atas dekana',
+    mission: 'Bentuk alkana rantai terbuka C₁₁H₂₄ dengan paling sedikit satu cabang.',
+    carbon: 11,
+    hydrogen: 24,
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Sebelas karbon • kerangka bercabang',
+    displayGraph: ETHYLMETHYLOCTANE_42,
+    requireBranched: true,
+    explanation:
+      'C₁₁H₂₄ tetap memenuhi CₙH₂ₙ₊₂ (n = 11). Kerangka bercabang seperti 4-etil-2-metiloktana sama sahnya dengan undekana lurus — yang diminta di sini yang bercabang.',
+    bonus: 'Pola rumus tidak berhenti di dekana: setiap alkana rantai terbuka memakai CₙH₂ₙ₊₂.',
+  }),
+  comboLevel({
+    id: 97,
+    zoneId: 'master-archive',
+    title: 'Ikatan di Posisi Tiga',
+    focus: 'Alkena C9 + nama',
+    mission: 'Bangun 3-nonena, lalu namai dengan posisi ikatan rangkap dua dari ujung terdekat.',
+    molecule: NONEN_3,
+    buildName: '3-nonena',
+    answerName: '3-nonena',
+    tokens: ['3', 'non', '-ena'],
+    altNames: ['non-3-ena'],
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+    clue: 'Sembilan karbon • ikatan rangkap dua posisi 3',
+  }),
+  nameLevel({
+    id: 98,
+    zoneId: 'master-archive',
+    title: 'Cabang di Karbon Rangkap Dua',
+    focus: 'Nama alkena bercabang',
+    mission: 'Temukan jalur terpanjang yang memuat C=C, lalu susun nama lengkapnya.',
+    displayGraph: METHYLNONENE_2,
+    answerName: '2-metil-1-nonena',
+    tokens: ['2', 'metil', '1', 'non', '-ena'],
+    altNames: ['2-metil-non-1-ena'],
+    category: 'alkena',
+    categoryLabel: 'Alkena',
+    clue: 'Induk sembilan karbon • rangkap dua di ujung • metil posisi 2',
+  }),
+  buildLevel({
+    id: 99,
+    zoneId: 'master-archive',
+    title: 'Dekuna Tengah',
+    focus: 'Alkuna sepuluh karbon',
+    mission: 'Susun 4-dekuna: ikatan rangkap tiga tepat di tengah rantai sepuluh karbon.',
+    molecule: DEKUN_4,
+    name: '4-dekuna',
+    category: 'alkuna',
+    categoryLabel: 'Alkuna',
+  }),
+  comboLevel({
+    id: 100,
+    zoneId: 'master-archive',
+    title: 'Arsip Terakhir',
+    focus: 'Tantangan gabungan',
+    mission: 'Bangun kerangka dua cabang etil ini, lalu susun nama lengkapnya dari token.',
+    molecule: DIETHYLHEPTANE_35,
+    buildName: '3,5-dietilheptana',
+    answerName: '3,5-dietilheptana',
+    tokens: ['3,5', 'dietil', 'hept', '-ana'],
+    altNames: ['3,5-dietil-heptana'],
+    category: 'alkana',
+    categoryLabel: 'Alkana',
+    clue: 'Induk tujuh karbon • dua cabang etil',
+    extra: 'Seluruh aturan bertemu di sini: rantai terpanjang, penomoran terkecil, pengali, dan urutan abjad substituen.',
   }),
 ];
 

@@ -111,8 +111,10 @@ export function getPreviousLevel(levelId) {
 }
 
 export function isLevelUnlocked(levelId) {
-  // Every level is open from the start; progress only tracks stars.
-  return Boolean(getLevel(levelId));
+  const id = Number(levelId);
+  if (!getLevel(id)) return false;
+  // Monotone: a level that already earned stars stays open even if an earlier one was skipped.
+  return id === 1 || isLevelComplete(id) || isLevelComplete(id - 1);
 }
 
 export function getContinueLevelId() {

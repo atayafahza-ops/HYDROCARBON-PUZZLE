@@ -188,6 +188,31 @@
   --zone-accent-soft: var(--rose-soft);
 }
 
+.zone-tab--cyan {
+  --zone-accent: var(--cyan);
+  --zone-accent-soft: var(--cyan-soft);
+}
+
+.zone-tab--teal {
+  --zone-accent: var(--teal);
+  --zone-accent-soft: var(--teal-soft);
+}
+
+.zone-tab--lime {
+  --zone-accent: var(--lime);
+  --zone-accent-soft: var(--lime-soft);
+}
+
+.zone-tab--orange {
+  --zone-accent: var(--orange);
+  --zone-accent-soft: var(--orange-soft);
+}
+
+.zone-tab--gold {
+  --zone-accent: var(--gold);
+  --zone-accent-soft: var(--gold-soft);
+}
+
 .zone-tab__icon {
   display: grid;
   place-items: center;
@@ -317,6 +342,11 @@
   box-shadow: 0 0 6px rgba(95, 224, 143, 0.45);
 }
 
+.legend-dot--open {
+  background: var(--cyan);
+  box-shadow: 0 0 6px rgba(92, 232, 213, 0.45);
+}
+
 .legend-dot--locked {
   background: #24434f;
 }
@@ -376,6 +406,26 @@
 
 .map-zone-badge--rose {
   --zone-accent: var(--rose);
+}
+
+.map-zone-badge--cyan {
+  --zone-accent: var(--cyan);
+}
+
+.map-zone-badge--teal {
+  --zone-accent: var(--teal);
+}
+
+.map-zone-badge--lime {
+  --zone-accent: var(--lime);
+}
+
+.map-zone-badge--orange {
+  --zone-accent: var(--orange);
+}
+
+.map-zone-badge--gold {
+  --zone-accent: var(--gold);
 }
 
 .map-head__copy {

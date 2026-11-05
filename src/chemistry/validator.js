@@ -97,6 +97,15 @@ export function validateBuild(level, molecule) {
     );
   }
 
+  if (rule.requireBranched && analysis.branchPoints.length === 0) {
+    return fail(
+      'branch',
+      'Kerangka masih lurus',
+      'Misi ini meminta isomer bercabang. Percabangan muncul ketika satu karbon mengikat tiga karbon lain, bukan ketika rantai dipanjangkan.',
+      analysis,
+    );
+  }
+
   if (rule.graph && !areGraphsIsomorphic(molecule, rule.graph)) {
     const targetAnalysis = analyzeMolecule(rule.graph);
     const targetName = level.result?.name ?? 'struktur target';

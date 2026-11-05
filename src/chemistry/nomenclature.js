@@ -1,11 +1,13 @@
 import { analyzeMolecule, getAdjacency } from './graph.js';
 
 export const STEMS = ['met', 'et', 'prop', 'but', 'pent', 'heks', 'hept', 'okt', 'non', 'dek'];
-export const SUBSTITUENTS = ['metil', 'etil', 'propil', 'butil'];
 export const SUFFIXES = ['-ana', '-ena', '-una'];
-export const NUMBER_TOKENS = ['1', '2', '3', '4', '5', '6'];
+export const NUMBER_TOKENS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 const MULTIPLIERS = { 2: 'di', 3: 'tri', 4: 'tetra' };
+
+const LOCANT_TOKEN = /^\d+(?:,\d+)*$/;
+const SUBSTITUENT_TOKEN = /^(?:di|tri|tetra)?(metil|etil|propil|butil)$/;
 
 function stemFor(length) {
   return STEMS[length - 1] ?? null;
@@ -94,7 +96,7 @@ function substituentsForPath(path, adjacency) {
 function multipleBondLocant(path, adjacency, order) {
   for (let index = 0; index < path.length - 1; index += 1) {
     const edge = (adjacency.get(path[index]) ?? []).find((neighbor) => neighbor.id === path[index + 1]);
-    if (edge?.order === order) return Math.min(index + 1, path.length - index - 1);
+    if (edge?.order === order) return index + 1;
   }
   return null;
 }
@@ -122,12 +124,13 @@ function betterNaming(a, b) {
 function composeSubstituentPrefix(substituents) {
   if (!substituents.length) return '';
   const groups = new Map();
-  for (const substituent of [...substituents].sort((a, b) => a.locant - b.locant || a.name.localeCompare(b.name))) {
+  for (const substituent of substituents) {
     if (!groups.has(substituent.name)) groups.set(substituent.name, []);
     groups.get(substituent.name).push(substituent.locant);
   }
 
   return [...groups.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([name, locants]) => {
       const sorted = locants.sort((a, b) => a - b);
       const multiplier = MULTIPLIERS[sorted.length] ?? '';
@@ -202,7 +205,9 @@ export function describeStructure(molecule) {
     category: analysis.category,
     parentLength: chosen.parentLength,
     multipleLocant: chosen.multipleLocant,
-    substituents: chosen.substituents,
+    substituents: [...chosen.substituents].sort(
+      (a, b) => a.locant - b.locant || a.name.localeCompare(b.name),
+    ),
     formula: analysis.formula,
     analysis,
   };
@@ -210,10 +215,10 @@ export function describeStructure(molecule) {
 
 export function tokenType(token) {
   if (!token) return null;
-  if (/^\d+$/.test(token)) return 'locant';
+  if (LOCANT_TOKEN.test(token)) return 'locant';
   if (STEMS.includes(token)) return 'stem';
   if (SUFFIXES.includes(token)) return 'suffix';
-  if (SUBSTITUENTS.includes(token)) return 'substituent';
+  if (SUBSTITUENT_TOKEN.test(token)) return 'substituent';
   return null;
 }
 

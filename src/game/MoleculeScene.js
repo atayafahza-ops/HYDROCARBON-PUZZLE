@@ -30,12 +30,16 @@ const PALETTE = {
   labelInvalid: '#fecdd3',
 };
 
-const MIN_ZOOM = 0.7;
+const MIN_ZOOM = 0.55;
 const MAX_ZOOM = 2.4;
-const ROOMY_GAP = 80;
-const COMPACT_GAP = 60;
-const ROOMY_MARGIN = 60;
-const COMPACT_MARGIN = 32;
+const ATOM_RADIUS = 24;
+const HIT_RADIUS = 28;
+const GRID_CELL = 32;
+const SNAP_STEP = 16;
+const ROOMY_GAP = 66;
+const COMPACT_GAP = 52;
+const ROOMY_MARGIN = 46;
+const COMPACT_MARGIN = 26;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -136,7 +140,7 @@ export class MoleculeScene extends Phaser.Scene {
     if (!graphics) return;
     graphics.clear();
 
-    const cell = 40;
+    const cell = GRID_CELL;
     graphics.fillStyle(0x0b1526, 0.35);
     graphics.fillRect(0, 0, this.width, this.height);
 
@@ -228,7 +232,7 @@ export class MoleculeScene extends Phaser.Scene {
     const label = this.add
       .text(0, 0, 'C', {
         fontFamily: '"Inter Variable", "Inter", system-ui, sans-serif',
-        fontSize: '14px',
+        fontSize: '13px',
         fontStyle: '600',
         color: PALETTE.label,
         resolution: Math.min(3, Math.max(2, dpr)),
@@ -279,14 +283,14 @@ export class MoleculeScene extends Phaser.Scene {
       graphics.clear();
       if (selected) {
         graphics.fillStyle(PALETTE.atomRingSelected, 0.1);
-        graphics.fillCircle(0, 0, 40);
+        graphics.fillCircle(0, 0, ATOM_RADIUS + 8);
       } else if (hovered) {
         graphics.fillStyle(0xf8fafc, 0.06);
-        graphics.fillCircle(0, 0, 37);
+        graphics.fillCircle(0, 0, ATOM_RADIUS + 6);
       }
 
       graphics.fillStyle(0x020817, 0.34);
-      graphics.fillCircle(0, 3, 30);
+      graphics.fillCircle(0, 2, ATOM_RADIUS);
 
       const ringColor = invalid
         ? PALETTE.atomRingInvalid
@@ -297,13 +301,13 @@ export class MoleculeScene extends Phaser.Scene {
             : PALETTE.atomRing;
 
       graphics.fillStyle(invalid ? PALETTE.atomFillInvalid : PALETTE.atomFill, 1);
-      graphics.fillCircle(0, 0, 30);
-      graphics.lineStyle(selected || invalid ? 2.6 : 2, ringColor, 1);
-      graphics.strokeCircle(0, 0, 29);
+      graphics.fillCircle(0, 0, ATOM_RADIUS);
+      graphics.lineStyle(selected || invalid ? 2.4 : 2, ringColor, 1);
+      graphics.strokeCircle(0, 0, ATOM_RADIUS - 1);
 
       if (invalid) {
         graphics.fillStyle(PALETTE.atomRingInvalid, 1);
-        graphics.fillCircle(22, -22, 5);
+        graphics.fillCircle(ATOM_RADIUS - 2, -(ATOM_RADIUS - 2), 4.5);
       }
     }
 
@@ -327,7 +331,7 @@ export class MoleculeScene extends Phaser.Scene {
       if (length < 1) continue;
       const ux = dx / length;
       const uy = dy / length;
-      const trim = Math.min(34, length * 0.28);
+      const trim = Math.min(ATOM_RADIUS + 4, length * 0.28);
       const x1 = a.x + ux * trim;
       const y1 = a.y + uy * trim;
       const x2 = b.x - ux * trim;
@@ -366,7 +370,7 @@ export class MoleculeScene extends Phaser.Scene {
   findAtomAt(x, y) {
     const world = this.screenToWorld(x, y);
     let nearest = null;
-    let nearestDistance = 34;
+    let nearestDistance = HIT_RADIUS;
     for (const node of this.molecule.nodes) {
       const distance = Math.hypot(node.x - world.x, node.y - world.y);
       if (distance <= nearestDistance) {
@@ -663,13 +667,13 @@ export class MoleculeScene extends Phaser.Scene {
     if (best) return best;
 
     // Dense fallback so adding never silently stalls if slots are exhausted.
-    const minX = Math.ceil(margin / 20) * 20;
-    const minY = Math.ceil(margin / 20) * 20;
-    const maxX = Math.floor((this.width - margin) / 20) * 20;
-    const maxY = Math.floor((this.height - margin) / 20) * 20;
-    for (let relaxed = gap - 10; relaxed >= 40; relaxed -= 10) {
-      for (let y = minY; y <= maxY; y += 20) {
-        for (let x = minX; x <= maxX; x += 20) {
+    const minX = Math.ceil(margin / SNAP_STEP) * SNAP_STEP;
+    const minY = Math.ceil(margin / SNAP_STEP) * SNAP_STEP;
+    const maxX = Math.floor((this.width - margin) / SNAP_STEP) * SNAP_STEP;
+    const maxY = Math.floor((this.height - margin) / SNAP_STEP) * SNAP_STEP;
+    for (let relaxed = gap - SNAP_STEP; relaxed >= ATOM_RADIUS * 2 - 4; relaxed -= SNAP_STEP) {
+      for (let y = minY; y <= maxY; y += SNAP_STEP) {
+        for (let x = minX; x <= maxX; x += SNAP_STEP) {
           if (this.molecule.nodes.every((node) => Math.hypot(node.x - x, node.y - y) >= relaxed)) {
             return { x, y };
           }
@@ -708,7 +712,7 @@ export class MoleculeScene extends Phaser.Scene {
   findFreeSnap(atomId, x, y) {
     const margin = this.snapMargin();
     const gap = this.minGap();
-    const snap = 20;
+    const snap = SNAP_STEP;
     const isFree = (cx, cy) =>
       cx >= margin &&
       cx <= this.width - margin &&

@@ -9,7 +9,7 @@ import { renderStructureSVG } from '../ui/structure.js';
 import { mountMoleculeBuilder } from '../game/builder.js';
 import { getLevel, getNextLevel } from '../data/levels.js';
 import { calculateStars } from '../systems/score.js';
-import { getSave, getTotalXp, recordCompletion } from '../systems/save.js';
+import { getSave, getTotalXp, isLevelUnlocked, recordCompletion } from '../systems/save.js';
 import { sfx } from '../systems/audio.js';
 import { showToast } from '../ui/toast.js';
 import { isModalOpen } from '../ui/modal.js';
@@ -733,6 +733,10 @@ export function mountLevel(root, params = {}) {
   const level = getLevel(params.levelId);
   if (!level) {
     navigate('levels');
+    return () => {};
+  }
+  if (!isLevelUnlocked(level.id)) {
+    navigate('levels', { zoneId: level.zoneId });
     return () => {};
   }
 

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node scripts/check-naming.mjs && node scripts/check-levels.mjs && node scripts/check-isomers.mjs && node scripts/check-save.mjs",
+    "verify:ui": "node scripts/verify-ui.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"

@@ -71,7 +71,7 @@ Struktur yang sama secara kimia tetap diterima meskipun digambar dengan tata let
 
 ## Level & Zona
 
-Saat ini tersedia **50 level** dalam **5 zona**. Semua level langsung terbuka, dan tingkat kesulitan naik setiap 5 level (10 tingkat, Pemula hingga Master).
+Saat ini tersedia **100 level** dalam **10 zona**. Level terbuka berurutan, dan tingkat kesulitan naik setiap 5 level (10 tingkat, Pemula hingga Master).
 
 | Zona | Level | Fokus |
 |---|---|---|
@@ -80,6 +80,11 @@ Saat ini tersedia **50 level** dalam **5 zona**. Semua level langsung terbuka, d
 | **Naming Database** | 21–30 | Rantai induk, nomor posisi, dan tata nama |
 | **Isomer Chamber** | 31–40 | Percabangan dan isomer struktur |
 | **Master Chemistry Lab** | 41–50 | Kombinasi semua mekanik |
+| **Heavy Chain Vault** | 51–60 | Nonana & dekana, cabang metil dan etil |
+| **Naming Forge** | 61–70 | Nama ↔ struktur dengan beberapa cabang |
+| **Isomer Analysis Lab** | 71–80 | Isomer alkana C₈–C₁₁ dan penomorannya |
+| **Bond Spectrum Wing** | 81–90 | Alkana, alkena, dan alkuna rantai panjang |
+| **Master Archive** | 91–100 | Tantangan gabungan dan koreksi nama |
 
 | # | Level | Tipe | Fokus |
 |---:|---|---|---|
@@ -91,6 +96,12 @@ Saat ini tersedia **50 level** dalam **5 zona**. Semua level langsung terbuka, d
 | 20 | Lab Challenge | Combo | Struktur + tata nama |
 | 39 | Isooktana | Structure Builder | Tiga cabang metil |
 | 50 | Master Molekul | Structure Builder | Empat cabang metil |
+| 51 | Sembilan Rantai Lurus | Structure Builder | Nonana C₉H₂₀ |
+| 54 | Sepuluh Karbon Lurus | Structure Builder | Dekana C₁₀H₂₂ |
+| 58 | Metil di Ujung Dekana | Combo | 2-metildekana |
+| 75 | Empat Cabang Tersebar | Name Decoder | 2,3,4,5-tetrametilheksana |
+| 93 | Arsip Salah Label | Name Decoder | Koreksi 2-etilnonana → 3-metildekana |
+| 100 | Arsip Master | Combo | 3,5-dietilheptana |
 
 Peta level lengkap dapat dilihat langsung di layar **Level Select**.
 
@@ -146,9 +157,12 @@ Buka **http://localhost:5173** di browser. Server berjalan dengan `--host 0.0.0.
 ### Build Versi Produksi
 
 ```bash
+npm test          # mesin tata nama, validasi 100 level, isomer, dan progres tersimpan
 npm run build     # hasil build ada di folder dist/
 npm run preview   # pratinjau hasil build di http://localhost:4173
 ```
+
+`npm run verify:ui` menjalankan pemeriksaan tambahan di Chromium (peta level, kunci level bertahap, papan 12 atom, dan layout mobile). Jalankan `npm run dev` terlebih dahulu; memerlukan `npx playwright install chromium`.
 
 ### Akses Online
 
@@ -201,6 +215,7 @@ HYDROCARBON-PUZZLE/
 ├── gdd.karbon              # Game Design Document
 ├── kimia.png               # Banner / cuplikan game
 ├── public/assets/img/      # Latar laboratorium & karakter
+├── scripts/                # Pemeriksaan konten & verifikasi di browser
 └── src/
     ├── main.js             # Entry point & router layar
     ├── chemistry/          # Validasi, rumus, graf, tata nama
@@ -209,15 +224,15 @@ HYDROCARBON-PUZZLE/
     ├── screens/            # Menu, level select, gameplay, hasil, codex
     ├── systems/            # Simpan progres, skor, audio, pengaturan
     ├── ui/                 # Dialog, modal, toast, ikon, router
-    └── styles/             # Tema pixel art & layout responsif
+    └── styles/             # Tata letak datar & responsif
 ```
 
 ---
 
 ## Peta Jalan
 
-- **v1.0 (sekarang)** — 50 level dalam 5 zona, 3 tipe puzzle, bintang, petunjuk, codex, progres tersimpan.
-- **v1.1** — Level alkana bercabang tambahan, variasi puzzle rumus, tutorial interaktif.
+- **v1.1 (sekarang)** — 100 level dalam 10 zona, level terbuka berurutan, rantai panjang C₉–C₁₂, nama dengan banyak cabang, dan koreksi nama pada level arsip.
+- **v1.0** — 50 level dalam 5 zona, 3 tipe puzzle, bintang, petunjuk, codex, progres tersimpan.
 - **v1.2** — Tantangan seluruh isomer, level bonus, statistik pemain.
 - **v2.0** — Struktur kompleks, sikloalkana, tantangan harian, cerita lanjutan.
 

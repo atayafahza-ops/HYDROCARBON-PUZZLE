@@ -24,6 +24,14 @@
   --violet-soft: rgba(167, 139, 250, 0.13);
   --rose: #fb7185;
   --rose-soft: rgba(251, 113, 133, 0.13);
+  --teal: #2dd4bf;
+  --teal-soft: rgba(45, 212, 191, 0.13);
+  --lime: #a3e635;
+  --lime-soft: rgba(163, 230, 53, 0.13);
+  --orange: #fb923c;
+  --orange-soft: rgba(251, 146, 60, 0.13);
+  --gold: #facc15;
+  --gold-soft: rgba(250, 204, 21, 0.13);
   --red: #f43f5e;
   --paper: #f1f5f9;
   --paper-deep: #e2e8f0;
