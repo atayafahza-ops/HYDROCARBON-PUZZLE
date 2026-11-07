@@ -168,8 +168,8 @@ for (const level of LEVELS) {
   ];
   for (const [field, text] of fields) {
     const claims = [
-      ...String(text).matchAll(/C([₀-₉]{1,2})(?:H[₀-₉]{1,2})?/g).map((m) => subscriptNumber(m[1])),
-      ...String(text).matchAll(/C(\d{1,2})(?:H\d{1,2})?\b/g).map((m) => Number(m[1])),
+      ...Array.from(String(text).matchAll(/C([₀-₉]{1,2})(?:H[₀-₉]{1,2})?/g), (m) => subscriptNumber(m[1])),
+      ...Array.from(String(text).matchAll(/C(\d{1,2})(?:H\d{1,2})?\b/g), (m) => Number(m[1])),
     ];
     for (const claimed of claims) {
       if (claimed !== actual) push(level.id, `${field} says C${claimed} but the structure is C${actual}`);
