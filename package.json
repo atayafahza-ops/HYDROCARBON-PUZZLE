@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node scripts/check-naming.mjs && node scripts/check-levels.mjs && node scripts/check-isomers.mjs && node scripts/check-save.mjs",
+    "test": "node scripts/check-naming.mjs && node scripts/check-levels.mjs && node scripts/check-isomers.mjs && node scripts/check-save.mjs && node scripts/check-reactions.mjs && node scripts/check-addition-save.mjs",
     "verify:ui": "node scripts/verify-ui.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",

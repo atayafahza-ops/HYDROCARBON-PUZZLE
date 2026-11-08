@@ -1,12 +1,30 @@
-import { formulaPlain } from './formula.js';
+import { formulaFromCounts } from './formula.js';
 
 export const MAX_VALENCE = 4;
 export const MAX_ATOMS = 12;
+
+export const ELEMENT_VALENCE = {
+  C: 4,
+  H: 1,
+  O: 2,
+  Br: 1,
+  Cl: 1,
+  I: 1,
+};
+
+export function elementOf(node) {
+  return node.element ?? 'C';
+}
+
+export function valenceOf(node) {
+  return ELEMENT_VALENCE[elementOf(node)] ?? MAX_VALENCE;
+}
 
 export function makeMolecule(nodes = [], edges = []) {
   return {
     nodes: nodes.map((node, index) => ({
       id: node.id ?? index,
+      ...(node.element ? { element: node.element } : {}),
       x: node.x ?? 0,
       y: node.y ?? 0,
     })),
@@ -49,13 +67,19 @@ export function bondOrderAt(molecule, atomId) {
 }
 
 export function hydrogensForAtom(molecule, atomId) {
-  return MAX_VALENCE - bondOrderAt(molecule, atomId);
+  const node = findAtom(molecule, atomId);
+  if (!node) return 0;
+  if (elementOf(node) === 'H') return 0;
+  return valenceOf(node) - bondOrderAt(molecule, atomId);
 }
 
 export function computeHydrogens(molecule) {
   const map = new Map();
   for (const node of molecule.nodes) {
-    map.set(node.id, MAX_VALENCE - bondOrderAt(molecule, node.id));
+    map.set(
+      node.id,
+      elementOf(node) === 'H' ? 0 : valenceOf(node) - bondOrderAt(molecule, node.id),
+    );
   }
   return map;
 }
@@ -102,18 +126,31 @@ export function analyzeMolecule(molecule) {
   const components = findComponents(molecule);
   const degrees = new Map(molecule.nodes.map((node) => [node.id, 0]));
   const bondCounts = { single: 0, double: 0, triple: 0 };
+  const elementCounts = {};
   let hydrogenCount = 0;
 
   for (const node of molecule.nodes) {
-    hydrogenCount += hydrogens.get(node.id) ?? 0;
+    const element = elementOf(node);
+    elementCounts[element] = (elementCounts[element] ?? 0) + 1;
+    hydrogenCount += element === 'H' ? 1 : hydrogens.get(node.id) ?? 0;
   }
+  if (hydrogenCount > 0) elementCounts.H = hydrogenCount;
 
+  const nodeById = new Map(molecule.nodes.map((node) => [node.id, node]));
+  let carbonDoubleBonds = 0;
+  let carbonTripleBonds = 0;
   for (const edge of molecule.edges) {
     degrees.set(edge.a, (degrees.get(edge.a) ?? 0) + 1);
     degrees.set(edge.b, (degrees.get(edge.b) ?? 0) + 1);
     if (edge.order === 1) bondCounts.single += 1;
     if (edge.order === 2) bondCounts.double += 1;
     if (edge.order === 3) bondCounts.triple += 1;
+    const a = nodeById.get(edge.a);
+    const b = nodeById.get(edge.b);
+    if (a && b && elementOf(a) === 'C' && elementOf(b) === 'C') {
+      if (edge.order === 2) carbonDoubleBonds += 1;
+      if (edge.order === 3) carbonTripleBonds += 1;
+    }
   }
 
   const invalidAtoms = molecule.nodes
@@ -121,13 +158,13 @@ export function analyzeMolecule(molecule) {
     .map((node) => node.id);
 
   const overValentAtoms = molecule.nodes
-    .filter((node) => bondOrderAt(molecule, node.id) > MAX_VALENCE)
+    .filter((node) => bondOrderAt(molecule, node.id) > valenceOf(node))
     .map((node) => node.id);
 
-  const carbonCount = molecule.nodes.length;
-  const connected = carbonCount > 0 && components.length === 1;
-  const ringCount = molecule.edges.length - carbonCount + components.length;
-  const acyclic = carbonCount > 0 && ringCount === 0;
+  const carbonCount = elementCounts.C ?? 0;
+  const connected = molecule.nodes.length > 0 && components.length === 1;
+  const ringCount = molecule.edges.length - molecule.nodes.length + components.length;
+  const acyclic = molecule.nodes.length > 0 && ringCount === 0;
   const largestComponent = components.reduce(
     (largest, component) => (component.length > largest.length ? component : largest),
     [],
@@ -140,19 +177,20 @@ export function analyzeMolecule(molecule) {
   let category = null;
   if (carbonCount === 1 && molecule.edges.length === 0) category = 'alkana';
   else if (molecule.edges.length === 0) category = null;
-  else if (bondCounts.triple > 0 && bondCounts.double === 0) category = 'alkuna';
-  else if (bondCounts.double > 0 && bondCounts.triple === 0) category = 'alkena';
-  else if (bondCounts.double === 0 && bondCounts.triple === 0) category = 'alkana';
+  else if (carbonTripleBonds > 0 && carbonDoubleBonds === 0) category = 'alkuna';
+  else if (carbonDoubleBonds > 0 && carbonTripleBonds === 0) category = 'alkena';
+  else if (carbonDoubleBonds === 0 && carbonTripleBonds === 0) category = 'alkana';
   else category = 'campuran';
 
   const branchPoints = molecule.nodes
-    .filter((node) => (degrees.get(node.id) ?? 0) >= 3)
+    .filter((node) => elementOf(node) === 'C' && (degrees.get(node.id) ?? 0) >= 3)
     .map((node) => node.id);
 
   return {
     carbonCount,
     hydrogenCount,
-    formula: formulaPlain(carbonCount, hydrogenCount),
+    elementCounts,
+    formula: formulaFromCounts(elementCounts),
     formulaCounts: { carbon: carbonCount, hydrogen: hydrogenCount },
     hydrogens,
     degrees,
@@ -168,7 +206,7 @@ export function analyzeMolecule(molecule) {
     largestComponent,
     branchPoints,
     invalidValence: invalidAtoms.length > 0 || overValentAtoms.length > 0,
-    atomCount: carbonCount,
+    atomCount: molecule.nodes.length,
     edgeCount: molecule.edges.length,
   };
 }
@@ -186,8 +224,8 @@ function adjacencyWithOrders(molecule) {
   return adjacency;
 }
 
-function signatureOf(neighbors) {
-  return [...neighbors.values()].sort((x, y) => x - y).join('.');
+function signatureOf(neighbors, element) {
+  return `${element}:${[...neighbors.values()].sort((x, y) => x - y).join('.')}`;
 }
 
 // Backtracking over bond-order signatures, so matching a ten-carbon skeleton does not
@@ -200,8 +238,8 @@ export function areGraphsIsomorphic(a, b) {
 
   const neighborsA = adjacencyWithOrders(a);
   const neighborsB = adjacencyWithOrders(b);
-  const keysA = neighborsA.map(signatureOf);
-  const keysB = neighborsB.map(signatureOf);
+  const keysA = neighborsA.map((neighbors, index) => signatureOf(neighbors, elementOf(a.nodes[index])));
+  const keysB = neighborsB.map((neighbors, index) => signatureOf(neighbors, elementOf(b.nodes[index])));
 
   const buckets = new Map();
   keysB.forEach((key, index) => {

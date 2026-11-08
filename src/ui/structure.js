@@ -1,10 +1,15 @@
-import { analyzeMolecule, computeHydrogens } from '../chemistry/graph.js';
+import { analyzeMolecule, computeHydrogens, elementOf } from '../chemistry/graph.js';
 import { toSubscript } from '../chemistry/formula.js';
 
-function hydrogenLabel(hydrogen) {
-  if (hydrogen === 0) return 'C';
-  if (hydrogen === 1) return 'CH';
-  return `CH${toSubscript(hydrogen)}`;
+function atomText(node, hydrogen) {
+  const element = elementOf(node);
+  if (element === 'C') {
+    if (hydrogen <= 0) return 'C';
+    if (hydrogen === 1) return 'CH';
+    return `CH${toSubscript(hydrogen)}`;
+  }
+  if (element === 'O') return hydrogen === 1 ? 'OH' : 'O';
+  return element;
 }
 
 function fallbackCoordinates(nodes) {
@@ -103,8 +108,10 @@ export function renderStructureSVG(molecule, options = {}) {
       const point = coords.get(node.id);
       if (!point) return '';
       const hydrogen = hydrogens.get(node.id) ?? 0;
-      const label = hydrogen < 0 ? 'C' : hydrogenLabel(hydrogen);
-      return `<text x="${point.x}" y="${point.y}" style="font-size:${fontSize}px" class="structure-atom${hydrogen < 0 ? ' is-invalid' : ''}" text-anchor="middle" dominant-baseline="central">${label}</text>`;
+      const label = atomText(node, hydrogen);
+      const element = elementOf(node);
+      const elementClass = element !== 'C' ? ` structure-atom--${element}` : '';
+      return `<text x="${point.x}" y="${point.y}" style="font-size:${fontSize}px" class="structure-atom${elementClass}${hydrogen < 0 ? ' is-invalid' : ''}" text-anchor="middle" dominant-baseline="central">${label}</text>`;
     })
     .join('');
 

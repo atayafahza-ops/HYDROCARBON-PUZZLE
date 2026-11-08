@@ -5,9 +5,10 @@ import {
   bondOrderAt,
   cloneMolecule,
   computeHydrogens,
+  elementOf,
   findAtom,
   findEdge,
-  MAX_VALENCE,
+  valenceOf,
 } from '../chemistry/graph.js';
 import { toSubscript } from '../chemistry/formula.js';
 
@@ -30,6 +31,15 @@ const PALETTE = {
   labelInvalid: '#fecdd3',
 };
 
+const ELEMENT_RING = {
+  C: 0x22d3ee,
+  O: 0xfb7185,
+  Br: 0xfb923c,
+  Cl: 0x10b981,
+  I: 0xa78bfa,
+  H: 0x94a3b8,
+};
+
 const MIN_ZOOM = 0.55;
 const MAX_ZOOM = 2.4;
 const ATOM_RADIUS = 24;
@@ -45,11 +55,18 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function atomLabel(hydrogen) {
-  if (hydrogen < 0) return 'C';
-  if (hydrogen === 0) return 'C';
-  if (hydrogen === 1) return 'CH';
-  return `CH${toSubscript(hydrogen)}`;
+function atomLabel(node, hydrogen) {
+  const element = elementOf(node);
+  if (element === 'C') {
+    if (hydrogen <= 0) return 'C';
+    if (hydrogen === 1) return 'CH';
+    return `CH${toSubscript(hydrogen)}`;
+  }
+  if (element === 'O') {
+    if (hydrogen === 1) return 'OH';
+    return 'O';
+  }
+  return element;
 }
 
 export class MoleculeScene extends Phaser.Scene {
@@ -262,13 +279,13 @@ export class MoleculeScene extends Phaser.Scene {
       const hydrogen = hydrogens.get(node.id) ?? 0;
       const invalid =
         hydrogen < 0 ||
-        bondOrderAt(this.molecule, node.id) > MAX_VALENCE ||
+        bondOrderAt(this.molecule, node.id) > valenceOf(node) ||
         this.validationMarks.has(node.id);
       const selected = this.selectedId === node.id;
       const hovered = this.hoverId === node.id && !selected;
 
       visual.container.setPosition(node.x, node.y);
-      const nextLabel = atomLabel(hydrogen);
+      const nextLabel = atomLabel(node, hydrogen);
       if (visual.lastLabel !== nextLabel) {
         visual.label.setText(nextLabel);
         visual.lastLabel = nextLabel;
@@ -292,13 +309,14 @@ export class MoleculeScene extends Phaser.Scene {
       graphics.fillStyle(0x020817, 0.34);
       graphics.fillCircle(0, 2, ATOM_RADIUS);
 
+      const elementRing = ELEMENT_RING[elementOf(node)] ?? PALETTE.atomRing;
       const ringColor = invalid
         ? PALETTE.atomRingInvalid
         : selected
           ? PALETTE.atomRingSelected
           : hovered
             ? PALETTE.atomRingHover
-            : PALETTE.atomRing;
+            : elementRing;
 
       graphics.fillStyle(invalid ? PALETTE.atomFillInvalid : PALETTE.atomFill, 1);
       graphics.fillCircle(0, 0, ATOM_RADIUS);
@@ -593,9 +611,14 @@ export class MoleculeScene extends Phaser.Scene {
   }
 
   addCarbon() {
+    return this.addAtom('C');
+  }
+
+  addAtom(element = 'C') {
     if (this.locked) return false;
+    if (!['C', 'O', 'Br', 'Cl', 'I'].includes(element)) return false;
     if (this.molecule.nodes.length >= MAX_ATOMS) {
-      this.hooks.onToast?.(`Maksimum ${MAX_ATOMS} atom karbon untuk area ini.`);
+      this.hooks.onToast?.(`Maksimum ${MAX_ATOMS} atom untuk area ini.`);
       return false;
     }
     const position = this.findFreePosition();
@@ -607,13 +630,34 @@ export class MoleculeScene extends Phaser.Scene {
     this.pushSnapshot();
     const id = this.nextAtomId;
     this.nextAtomId += 1;
-    this.molecule.nodes.push({ id, x: position.x, y: position.y });
+    this.molecule.nodes.push({ id, element, x: position.x, y: position.y });
     if (this.selectedId === null) this.selectedId = id;
     this.syncAtomVisuals();
     this.drawBonds();
     this.emitUpdate();
     this.hooks.onAction?.('place');
     return true;
+  }
+
+  loadMolecule(molecule) {
+    const clone = cloneMolecule(molecule);
+    for (const visual of this.atomVisuals.values()) visual.container.destroy(true);
+    this.atomVisuals.clear();
+    this.molecule = clone;
+    this.nextAtomId = clone.nodes.reduce((max, node) => Math.max(max, Number(node.id) + 1), 0);
+    this.selectedId = null;
+    this.hoverId = null;
+    this.history = [];
+    this.validationMarks.clear();
+    this.clampAtomsToCanvas();
+    for (const node of this.molecule.nodes) {
+      const separated = this.separatePosition(node.id, node.x, node.y);
+      node.x = separated.x;
+      node.y = separated.y;
+    }
+    this.syncAtomVisuals();
+    this.drawBonds();
+    this.emitUpdate();
   }
 
   minGap() {

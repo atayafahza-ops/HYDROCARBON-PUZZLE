@@ -118,6 +118,12 @@ export function mountMenu(root) {
               <span class="menu-btn__copy"><strong>Molecular Codex</strong><span>Ensiklopedia hidrokarbon</span></span>
               ${icon('chevron-right', 17)}
             </button>
+            <button type="button" class="menu-btn menu-btn--cyan" data-action="addition">
+              <span class="menu-btn__icon">${icon('flask', 22)}</span>
+              <span class="menu-btn__copy"><strong>Addition Lab</strong><span>Mode reaksi adisi · 40 eksperimen</span></span>
+              <span class="menu-btn__badge">BARU</span>
+              ${icon('chevron-right', 17)}
+            </button>
             <div class="menu-row-split">
               <button type="button" class="menu-btn menu-btn--slate menu-btn--compact" data-action="settings">
                 <span class="menu-btn__icon">${icon('gear', 20)}</span>
@@ -247,6 +253,8 @@ export function mountMenu(root) {
           navigate('levels');
         } else if (action === 'codex') {
           navigate('codex');
+        } else if (action === 'addition') {
+          navigate('addition');
         } else if (action === 'settings') {
           openSettingsModal({ onReset: () => navigate('menu') });
         } else if (action === 'credits') {

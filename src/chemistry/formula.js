@@ -45,3 +45,35 @@ export function formulaHTML(carbon, hydrogen, options = {}) {
 export function formatAtomHydrogens(hydrogen) {
   return `H${hydrogen}`;
 }
+
+const HILL_ORDER = ['C', 'H', 'Br', 'Cl', 'I', 'O'];
+
+function orderedElements(counts) {
+  const known = HILL_ORDER.filter((element) => (counts[element] ?? 0) > 0);
+  const rest = Object.keys(counts)
+    .filter((element) => !HILL_ORDER.includes(element) && counts[element] > 0)
+    .sort();
+  return [...known, ...rest];
+}
+
+export function formulaFromCounts(counts) {
+  return orderedElements(counts)
+    .map((element) => `${element}${counts[element] > 1 ? counts[element] : ''}`)
+    .join('');
+}
+
+export function formulaUnicodeFromCounts(counts) {
+  const elements = orderedElements(counts);
+  if (!elements.length) return '—';
+  return elements
+    .map((element) => `${element}${counts[element] > 1 ? toSubscript(counts[element]) : ''}`)
+    .join('');
+}
+
+export function formulaHTMLFromCounts(counts, options = {}) {
+  const elements = orderedElements(counts);
+  if (!elements.length) return options.empty ?? '—';
+  return elements
+    .map((element) => `${element}${counts[element] > 1 ? `<sub>${counts[element]}</sub>` : ''}`)
+    .join('');
+}

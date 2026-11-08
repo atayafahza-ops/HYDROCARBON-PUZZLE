@@ -52,6 +52,8 @@ export function mountMoleculeBuilder(host, hooks = {}) {
 
   const api = {
     addCarbon: () => scene.addCarbon(),
+    addAtom: (element) => scene.addAtom(element),
+    loadMolecule: (molecule) => scene.loadMolecule(molecule),
     setBondOrder: (order) => scene.setBondOrder(order),
     deleteSelected: () => scene.deleteSelected(),
     undo: () => scene.undo(),
