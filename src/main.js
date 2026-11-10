@@ -9,13 +9,6 @@ import { mountLevels } from './screens/levels.js';
 import { mountCodex } from './screens/codex.js';
 import { mountLevel } from './screens/level.js';
 import { mountResult } from './screens/result.js';
-import { mountAdditionMenu } from './additionLab/screens/menu.js';
-import { mountAdditionMap } from './additionLab/screens/map.js';
-import { mountAdditionBriefing } from './additionLab/screens/briefing.js';
-import { mountAdditionLab } from './additionLab/screens/workspace.js';
-import { mountAdditionResult } from './additionLab/screens/result.js';
-import { mountAdditionCodex } from './additionLab/screens/codex.js';
-import { mountAdditionProfile } from './additionLab/screens/profile.js';
 import { getLevel } from './data/levels.js';
 import { applySettings } from './systems/settings.js';
 import { sfx } from './systems/audio.js';
@@ -30,13 +23,6 @@ const SCREENS = {
   codex: mountCodex,
   level: mountLevel,
   result: mountResult,
-  addition: mountAdditionMenu,
-  'addition-map': mountAdditionMap,
-  'addition-briefing': mountAdditionBriefing,
-  'addition-lab': mountAdditionLab,
-  'addition-result': mountAdditionResult,
-  'addition-codex': mountAdditionCodex,
-  'addition-profile': mountAdditionProfile,
 };
 
 const TITLES = {
@@ -45,13 +31,6 @@ const TITLES = {
   codex: 'Molecular Codex',
   level: 'Laboratorium',
   result: 'Hasil Misi',
-  addition: 'Addition Lab',
-  'addition-map': 'Peta Eksperimen',
-  'addition-briefing': 'Briefing Eksperimen',
-  'addition-lab': 'Reaction Workspace',
-  'addition-result': 'Laporan Eksperimen',
-  'addition-codex': 'Reaction Codex',
-  'addition-profile': 'Research Profile',
 };
 
 let cleanup = null;
