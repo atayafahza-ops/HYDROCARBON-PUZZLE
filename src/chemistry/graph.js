@@ -195,6 +195,8 @@ export function analyzeMolecule(molecule) {
     hydrogens,
     degrees,
     bondCounts,
+    carbonDoubleBonds,
+    carbonTripleBonds,
     components,
     connected,
     acyclic,
